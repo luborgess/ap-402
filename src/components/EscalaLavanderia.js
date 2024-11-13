@@ -184,16 +184,16 @@ const LaundrySchedule = () => {
           </CardHeader>
 
           <CardContent className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-7 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {schedule.map((day, index) => (
                 <div
                   key={index}
                   className={`
-                    bg-gray-50 rounded-lg p-4 shadow transition-transform hover:scale-105
+                    bg-gray-50 rounded-lg p-3 shadow transition-transform hover:scale-105
                     ${isCurrentDate(day.date) ? 'ring-2 ring-blue-500 bg-blue-50' : ''}
                   `}
                 >
-                  <div className="flex flex-col items-center space-y-2">
+                  <div className="flex flex-col sm:flex-row items-center justify-between space-y-2 sm:space-y-0 sm:space-x-2">
                     <div className="text-blue-600 font-semibold text-center">
                       <div className="capitalize">
                         {day.date.toLocaleDateString('pt-BR', {
