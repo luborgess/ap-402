@@ -86,8 +86,8 @@ const EscalaLavanderia = () => {
   };
 
   const adicionarAoCalendario = (data, morador) => {
-    const titulo = `Lavanderia - ${morador}`;
-    const descricao = `Horário reservado para ${morador} usar a máquina de lavar`;
+    const titulo = `Dia de lavar as Roupas 👖👕 ${morador}`;
+    const descricao = `Dia reservado para ${morador} usar a máquina de lavar`;
     
     const dataInicio = formatarDataCalendario(data, 8, 0);
     const dataFim = formatarDataCalendario(data, 22, 0);
@@ -171,7 +171,7 @@ const EscalaLavanderia = () => {
             })}
           </div>
           <div className="mt-4 text-sm text-gray-600">
-            * A escala rotaciona entre os 8 moradores a cada 8 dias, os horários são sugestões.
+            Made by @luborges.me
           </div>
         </CardContent>
       </Card>
