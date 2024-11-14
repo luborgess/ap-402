@@ -81,7 +81,7 @@ const LaundrySchedule = () => {
   const handleAddToCalendar = (date, person) => {
     try {
       const event = {
-        title: `Dia de Lavar Roupa - ${person}`,
+        title: `Dia de Lavar Roupas 👖`,
         start: date.toISOString().split('T')[0],
         end: date.toISOString().split('T')[0],
         description: `Dia designado para ${person} lavar roupa`
