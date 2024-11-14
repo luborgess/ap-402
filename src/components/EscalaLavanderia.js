@@ -132,7 +132,7 @@ const generateIcsFile = () => {
       const endDateStr = new Date(currentDate.getTime() + 24 * 60 * 60 * 1000).toISOString().replace(/-|:|\.\d+/g, '');
       
       events.push(`BEGIN:VEVENT
-SUMMARY:Dia de Lavar Roupa - ${selectedPerson}
+SUMMARY:Dia de Lavar Roupas 👖
 DTSTART;VALUE=DATE:${startDateStr}
 DTEND;VALUE=DATE:${endDateStr}
 DESCRIPTION:Dia designado para ${selectedPerson} lavar roupa
