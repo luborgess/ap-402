@@ -7,7 +7,7 @@ Este é um projeto Next.js que gerencia a escala de lavagem de roupas em uma rep
 ### v1.2.0 (21/11/2024)
 - 📅 Ajuste no período de eventos do calendário
   - Eventos gerados apenas a partir do dia atual
-  - Data final definida para 7 de dezembro de 2024 (fim do semestre)
+  - Data final definida para 8 de fevereiro de 2024 (fim do semestre letivo da UFMG)
   - Remoção da geração de eventos passados
   - Otimização no formato das datas ICS
 
