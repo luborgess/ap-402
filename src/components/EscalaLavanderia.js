@@ -143,7 +143,7 @@ const generateIcsFile = () => {
   today.setHours(0, 0, 0, 0);  // Remove o horário para comparação precisa
   
   // Define a data final como 7 de dezembro de 2024
-  const endDate = new Date(2025, 02, 8); // (0-based)
+  const endDate = new Date(2025, 1, 8); // (0-based)
 
   const events = [];
   let currentDate = new Date(today);
