@@ -16,6 +16,24 @@ const LaundrySchedule = () => {
   // Data inicial (13/11/2024)
   const startDate = new Date(2024, 10, 13);
 
+  // Calcula a diferença entre a semana atual e a semana inicial
+  const calculateInitialWeek = () => {
+    const today = new Date();
+    const diffTime = today.getTime() - startDate.getTime();
+    const diffWeeks = Math.floor(diffTime / (7 * 24 * 60 * 60 * 1000));
+    return diffWeeks;
+  };
+
+  // Inicializa com a semana atual
+  useEffect(() => {
+    const initialWeek = calculateInitialWeek();
+    setCurrentWeek(initialWeek);
+  }, []);
+
+  useEffect(() => {
+    setShowBackToCurrentButton(currentWeek !== calculateInitialWeek());
+  }, [currentWeek]);
+
   useEffect(() => {
     setShowBackToCurrentButton(currentWeek !== 0);
   }, [currentWeek]);
@@ -106,16 +124,17 @@ const LaundrySchedule = () => {
     }
   };
 
-  // Função para voltar à semana atual
-  const handleBackToCurrent = () => {
-    setCurrentWeek(0);
-    setNotification({
-      show: true,
-      message: 'Voltando para a semana atual!'
-    });
-    setTimeout(() => setNotification({ show: false, message: '' }), 2000);
-  };
+ // Função para voltar à semana atual
+const handleBackToCurrent = () => {
+  setCurrentWeek(calculateInitialWeek());
+  setNotification({
+    show: true,
+    message: 'Voltando para a semana atual!'
+  });
+  setTimeout(() => setNotification({ show: false, message: '' }), 2000);
+};
 
+<<<<<<< HEAD
   // Função para gerar arquivo .ics
   const generateIcsFile = () => {
     if (!selectedPerson) return;
@@ -132,6 +151,32 @@ const LaundrySchedule = () => {
         const endDateStr = new Date(currentDate.getTime() + 24 * 60 * 60 * 1000).toISOString().replace(/-|:|\.\d+/g, '');
 
         events.push(`BEGIN:VEVENT
+=======
+// Função para gerar arquivo .ics
+const generateIcsFile = () => {
+  if (!selectedPerson) return;
+
+  // Define a data inicial como a data atual
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);  // Remove o horário para comparação precisa
+  
+  // Define a data final como 7 de dezembro de 2024
+  const endDate = new Date(2025, 1, 8); // (0-based)
+
+  const events = [];
+  let currentDate = new Date(today);
+  
+  while (currentDate <= endDate) {
+    const personIndex = getPersonIndex(currentDate);
+    if (people[personIndex] === selectedPerson) {
+      // Formata a data no padrão ICS (YYYYMMDD)
+      const startDateStr = currentDate.toISOString().slice(0, 10).replace(/-/g, '');
+      const nextDay = new Date(currentDate);
+      nextDay.setDate(nextDay.getDate() + 1);
+      const endDateStr = nextDay.toISOString().slice(0, 10).replace(/-/g, '');
+      
+      events.push(`BEGIN:VEVENT
+>>>>>>> 4a5b99efc4f760add524aaf92f10be8675ba15ff
 SUMMARY:Dia de Lavar Roupas 👖
 DTSTART;VALUE=DATE:${startDateStr}
 DTEND;VALUE=DATE:${endDateStr}
@@ -148,6 +193,7 @@ CALSCALE:GREGORIAN
 ${events.join('\n')}
 END:VCALENDAR`;
 
+<<<<<<< HEAD
     const blob = new Blob([icsData], { type: 'text/calendar;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -158,6 +204,18 @@ END:VCALENDAR`;
     document.body.removeChild(link);
   };
 
+=======
+  const blob = new Blob([icsData], { type: 'text/calendar;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.setAttribute('download', `${selectedPerson}-laundry-schedule.ics`);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url); // Libera o URL após o download
+};
+>>>>>>> 4a5b99efc4f760add524aaf92f10be8675ba15ff
   return (
     <div className="w-full max-w-6xl mx-auto p-4 sm:p-6 flex flex-col min-h-screen">
       {notification.show && (
@@ -271,7 +329,7 @@ END:VCALENDAR`;
       <div className="flex flex-col items-center gap-4">
         <div className="mt-4 sm:mt-6 bg-white/10 rounded-lg p-4 sm:p-6 shadow-lg backdrop-blur-md flex flex-col sm:flex-row items-center justify-between">
           <h3 className="bg-blue-600 rounded-md text-lg sm:text-xl font-semibold mb-2 sm:mb-0 px-2 py-1 text-white">
-            Escala semestral:
+            Escala 2024.2:
           </h3>
           <div className="flex items-center gap-4 justify-center px-2 py-1 ">
             <select
