@@ -9,10 +9,10 @@ const LaundrySchedule = () => {
   const [notification, setNotification] = useState({ show: false, message: '' });
   const [showBackToCurrentButton, setShowBackToCurrentButton] = useState(false);
   const [selectedPerson, setSelectedPerson] = useState('');
-  
+
   // Lista de pessoas na escala
-  const people = ['Luiz', 'Lucas', 'Gabriel', 'A definir', 'Kelvin', 'Natan', 'Bruno', 'Robson'];
-  
+  const people = ['Robson', 'Lucas', 'Bruno', 'Kelvin', 'Fulano', 'Natan', 'Gabriel', 'Luiz'];
+
   // Data inicial (13/11/2024)
   const startDate = new Date(2024, 10, 13);
 
@@ -37,12 +37,12 @@ const LaundrySchedule = () => {
     const diff = date.getDate() - day + (day === 0 ? -6 : 1);
     return new Date(date.setDate(diff));
   };
-  
+
   // Gerar dias para a semana atual
   const getWeekSchedule = (weekOffset) => {
     const weekStart = getMondayOfWeek(new Date(startDate));
     weekStart.setDate(weekStart.getDate() + (weekOffset * 7));
-    
+
     return Array.from({ length: 7 }, (_, i) => {
       const date = new Date(weekStart);
       date.setDate(date.getDate() + i);
@@ -59,7 +59,7 @@ const LaundrySchedule = () => {
   const getWeekPeriod = () => {
     const firstDay = schedule[0].date;
     const lastDay = schedule[6].date;
-    
+
     return `${firstDay.toLocaleDateString('pt-BR', {
       day: '2-digit',
       month: '2-digit'
@@ -90,7 +90,7 @@ const LaundrySchedule = () => {
       const googleCalendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(event.title)}&dates=${event.start.replace(/-/g, '')}/${event.end.replace(/-/g, '')}&details=${encodeURIComponent(event.description)}`;
 
       window.open(googleCalendarUrl, '_blank');
-      
+
       setNotification({
         show: true,
         message: 'Redirecionando para adicionar ao seu calendário!'
@@ -116,47 +116,48 @@ const LaundrySchedule = () => {
     setTimeout(() => setNotification({ show: false, message: '' }), 2000);
   };
 
- // Função para gerar arquivo .ics
-const generateIcsFile = () => {
-  if (!selectedPerson) return;
+  // Função para gerar arquivo .ics
+  const generateIcsFile = () => {
+    if (!selectedPerson) return;
 
-  const endDate = new Date(startDate);
-  endDate.setMonth(endDate.getMonth() + 6);
+    const endDate = new Date(startDate);
+    endDate.setMonth(endDate.getMonth() + 6);
 
-  const events = [];
-  let currentDate = new Date(startDate);
-  while (currentDate <= endDate) {
-    const personIndex = getPersonIndex(currentDate);
-    if (people[personIndex] === selectedPerson) {
-      const startDateStr = currentDate.toISOString().replace(/-|:|\.\d+/g, '');
-      const endDateStr = new Date(currentDate.getTime() + 24 * 60 * 60 * 1000).toISOString().replace(/-|:|\.\d+/g, '');
-      
-      events.push(`BEGIN:VEVENT
+    const events = [];
+    let currentDate = new Date(startDate);
+    while (currentDate <= endDate) {
+      const personIndex = getPersonIndex(currentDate);
+      if (people[personIndex] === selectedPerson) {
+        const startDateStr = currentDate.toISOString().replace(/-|:|\.\d+/g, '');
+        const endDateStr = new Date(currentDate.getTime() + 24 * 60 * 60 * 1000).toISOString().replace(/-|:|\.\d+/g, '');
+
+        events.push(`BEGIN:VEVENT
 SUMMARY:Dia de Lavar Roupas 👖
 DTSTART;VALUE=DATE:${startDateStr}
 DTEND;VALUE=DATE:${endDateStr}
 DESCRIPTION:Dia designado para ${selectedPerson} lavar roupa
 END:VEVENT`);
+      }
+      currentDate.setDate(currentDate.getDate() + 1);
     }
-    currentDate.setDate(currentDate.getDate() + 1);
-  }
 
-  const icsData = `BEGIN:VCALENDAR
+    const icsData = `BEGIN:VCALENDAR
 VERSION:2.0
 PRODID:-//Laundry Schedule//EN
 CALSCALE:GREGORIAN
 ${events.join('\n')}
 END:VCALENDAR`;
 
-  const blob = new Blob([icsData], { type: 'text/calendar;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.setAttribute('download', `${selectedPerson}-laundry-schedule.ics`);
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-};
+    const blob = new Blob([icsData], { type: 'text/calendar;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `${selectedPerson}-laundry-schedule.ics`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="w-full max-w-6xl mx-auto p-4 sm:p-6 flex flex-col min-h-screen">
       {notification.show && (
@@ -175,18 +176,18 @@ END:VCALENDAR`;
           <span className="hidden sm:inline">Semana Atual</span>
         </button>
       )}
-      
+
       <Card className="bg-white/10 shadow-lg backdrop-blur-md border-0 w-full">
         <CardHeader className="flex flex-col bg-blue-600 text-white rounded-t-lg p-4 sm:p-6">
           <div className="grid grid-cols-[40px_1fr_40px] sm:grid-cols-[48px_1fr_48px] items-center w-full gap-2">
-            <button 
+            <button
               onClick={() => setCurrentWeek(prev => prev - 1)}
               className="p-2 hover:bg-blue-700 rounded-full transition-colors w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center"
               aria-label="Semana anterior"
             >
               <ChevronLeft className="h-5 sm:h-6 w-5 sm:w-6" />
             </button>
-            
+
             <div className="flex flex-col items-center w-full min-w-0">
               <div className="flex items-center justify-center gap-2 w-full">
                 <Calendar className="h-5 sm:h-6 w-5 sm:w-6 flex-shrink-0" />
@@ -202,7 +203,7 @@ END:VCALENDAR`;
               </span>
             </div>
 
-            <button 
+            <button
               onClick={() => setCurrentWeek(prev => prev + 1)}
               className="p-2 hover:bg-blue-700 rounded-full transition-colors w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center justify-self-end"
               aria-label="Próxima semana"
@@ -217,8 +218,7 @@ END:VCALENDAR`;
             {schedule.map((day, index) => (
               <div
                 key={index}
-                className={`
-                  bg-gray-50 rounded-lg p-3 shadow transition-transform hover:scale-105
+                className={`bg-gray-50 rounded-lg p-3 shadow transition-transform hover:scale-105
                   ${isCurrentDate(day.date) ? 'ring-2 ring-blue-500 bg-blue-50' : ''}
                   ${index === 0 ? 'sm:col-span-1 lg:col-span-1' : ''}
                 `}
