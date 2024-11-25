@@ -34,10 +34,6 @@ const LaundrySchedule = () => {
     setShowBackToCurrentButton(currentWeek !== calculateInitialWeek());
   }, [currentWeek]);
 
-  useEffect(() => {
-    setShowBackToCurrentButton(currentWeek !== 0);
-  }, [currentWeek]);
-
   // Função para calcular o índice da pessoa baseado na data
   const getPersonIndex = (date) => {
     const diffDays = Math.floor((date - startDate) / (1000 * 60 * 60 * 24));
@@ -124,17 +120,16 @@ const LaundrySchedule = () => {
     }
   };
 
- // Função para voltar à semana atual
-const handleBackToCurrent = () => {
-  setCurrentWeek(calculateInitialWeek());
-  setNotification({
-    show: true,
-    message: 'Voltando para a semana atual!'
-  });
-  setTimeout(() => setNotification({ show: false, message: '' }), 2000);
-};
+  // Função para voltar à semana atual
+  const handleBackToCurrent = () => {
+    setCurrentWeek(calculateInitialWeek());
+    setNotification({
+      show: true,
+      message: 'Voltando para a semana atual!'
+    });
+    setTimeout(() => setNotification({ show: false, message: '' }), 2000);
+  };
 
-<<<<<<< HEAD
   // Função para gerar arquivo .ics
   const generateIcsFile = () => {
     if (!selectedPerson) return;
@@ -147,54 +142,22 @@ const handleBackToCurrent = () => {
     while (currentDate <= endDate) {
       const personIndex = getPersonIndex(currentDate);
       if (people[personIndex] === selectedPerson) {
-        const startDateStr = currentDate.toISOString().replace(/-|:|\.\d+/g, '');
-        const endDateStr = new Date(currentDate.getTime() + 24 * 60 * 60 * 1000).toISOString().replace(/-|:|\.\d+/g, '');
+        const startDateStr = currentDate.toISOString().replace(/[:-]/g, '').split('.')[0] + 'Z';
+        const endDateStr = new Date(currentDate.getTime() + 24 * 60 * 60 * 1000)
+          .toISOString()
+          .replace(/[:-]/g, '')
+          .split('.')[0] + 'Z';
 
-        events.push(`BEGIN:VEVENT
-=======
-// Função para gerar arquivo .ics
-const generateIcsFile = () => {
-  if (!selectedPerson) return;
-
-  // Define a data inicial como a data atual
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);  // Remove o horário para comparação precisa
-  
-  // Define a data final como 7 de dezembro de 2024
-  const endDate = new Date(2025, 1, 8); // (0-based)
-
-  const events = [];
-  let currentDate = new Date(today);
-  
-  while (currentDate <= endDate) {
-    const personIndex = getPersonIndex(currentDate);
-    if (people[personIndex] === selectedPerson) {
-      // Formata a data no padrão ICS (YYYYMMDD)
-      const startDateStr = currentDate.toISOString().slice(0, 10).replace(/-/g, '');
-      const nextDay = new Date(currentDate);
-      nextDay.setDate(nextDay.getDate() + 1);
-      const endDateStr = nextDay.toISOString().slice(0, 10).replace(/-/g, '');
-      
-      events.push(`BEGIN:VEVENT
->>>>>>> 4a5b99efc4f760add524aaf92f10be8675ba15ff
-SUMMARY:Dia de Lavar Roupas 👖
-DTSTART;VALUE=DATE:${startDateStr}
-DTEND;VALUE=DATE:${endDateStr}
-DESCRIPTION:Dia designado para ${selectedPerson} lavar roupa
-END:VEVENT`);
+        events.push(
+          `BEGIN:VEVENT\nDTSTART:${startDateStr}\nDTEND:${endDateStr}\nSUMMARY:Dia de Lavar Roupas\nDESCRIPTION:Dia designado para ${selectedPerson} lavar roupa\nEND:VEVENT`
+        );
       }
       currentDate.setDate(currentDate.getDate() + 1);
     }
 
-    const icsData = `BEGIN:VCALENDAR
-VERSION:2.0
-PRODID:-//Laundry Schedule//EN
-CALSCALE:GREGORIAN
-${events.join('\n')}
-END:VCALENDAR`;
+    const icsContent = `BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//Laundry Schedule//EN\nCALSCALE:GREGORIAN\n${events.join('\n')}\nEND:VCALENDAR`;
 
-<<<<<<< HEAD
-    const blob = new Blob([icsData], { type: 'text/calendar;charset=utf-8' });
+    const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
@@ -202,20 +165,9 @@ END:VCALENDAR`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
-=======
-  const blob = new Blob([icsData], { type: 'text/calendar;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.setAttribute('download', `${selectedPerson}-laundry-schedule.ics`);
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  URL.revokeObjectURL(url); // Libera o URL após o download
-};
->>>>>>> 4a5b99efc4f760add524aaf92f10be8675ba15ff
   return (
     <div className="w-full max-w-6xl mx-auto p-4 sm:p-6 flex flex-col min-h-screen">
       {notification.show && (
@@ -272,21 +224,18 @@ END:VCALENDAR`;
         </CardHeader>
 
         <CardContent className="p-4 sm:p-6 flex flex-col sm:flex-row items-center justify-center sm:justify-between space-y-4 sm:space-y-0 sm:space-x-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-7 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-7 gap-4 w-full">
             {schedule.map((day, index) => (
               <div
                 key={index}
                 className={`bg-gray-50 rounded-lg p-3 shadow transition-transform hover:scale-105
                   ${isCurrentDate(day.date) ? 'ring-2 ring-blue-500 bg-blue-50' : ''}
-                  ${index === 0 ? 'sm:col-span-1 lg:col-span-1' : ''}
-                `}
+                  ${index === 0 ? 'sm:col-span-1 lg:col-span-1' : ''}`}
               >
                 <div className="flex flex-col items-center justify-between space-y-2">
                   <div className="text-blue-600 font-semibold text-center">
                     <div className="capitalize">
-                      {day.date.toLocaleDateString('pt-BR', {
-                        weekday: 'long'
-                      })}
+                      {day.date.toLocaleDateString('pt-BR', { weekday: 'long' })}
                     </div>
                     <div className="text-lg">
                       {day.date.toLocaleDateString('pt-BR', {
@@ -295,12 +244,14 @@ END:VCALENDAR`;
                       })}
                     </div>
                   </div>
+                  
                   <div className="flex items-center gap-2">
-                    <User className="h-5 sm:h-5 w-5 sm:w-5 text-gray-600" />
+                    <User className="h-5 w-5 text-gray-600" />
                     <span className="text-lg font-medium text-gray-800">
                       {day.person}
                     </span>
                   </div>
+                  
                   <div className="h-6">
                     {isCurrentDate(day.date) && (
                       <span className="text-sm text-blue-600 font-medium">
@@ -308,13 +259,14 @@ END:VCALENDAR`;
                       </span>
                     )}
                   </div>
+                  
                   <div className="h-8 flex items-center justify-center">
                     <button
                       onClick={() => handleAddToCalendar(day.date, day.person)}
-                      className="p-2 text-blue-600 hover:text-blue-800 transition-colors rounded-full hover:bg-blue-50 group relative flex items-center justify-center"
+                      className="p-2 text-blue-600 hover:text-blue-800 transition-colors rounded-full hover:bg-blue-50 group relative"
                       aria-label="Adicionar ao calendário"
                     >
-                      <CalendarDays className="h-5 sm:h-5 w-5 sm:w-5" />
+                      <CalendarDays className="h-5 w-5" />
                       <span className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 whitespace-nowrap transition-opacity">
                         Adicionar ao calendário
                       </span>
@@ -326,30 +278,36 @@ END:VCALENDAR`;
           </div>
         </CardContent>
       </Card>
+
       <div className="flex flex-col items-center gap-4">
         <div className="mt-4 sm:mt-6 bg-white/10 rounded-lg p-4 sm:p-6 shadow-lg backdrop-blur-md flex flex-col sm:flex-row items-center justify-between">
           <h3 className="bg-blue-600 rounded-md text-lg sm:text-xl font-semibold mb-2 sm:mb-0 px-2 py-1 text-white">
             Escala 2024.2:
           </h3>
-          <div className="flex items-center gap-4 justify-center px-2 py-1 ">
+          <div className="flex flex-col sm:flex-row items-center gap-4">
             <select
               value={selectedPerson}
               onChange={(e) => setSelectedPerson(e.target.value)}
-              className="bg-blue-600 px-2 py-1 text-white px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-700 focus:ring-offset-2"
+              className="p-2 rounded-md border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
-              <option value="">Selecione seu nome</option>
-              {people.map((person, index) => (
-                <option key={index} value={person}>{person}</option>
+              <option value="">Selecione uma pessoa</option>
+              {people.map((person) => (
+                <option key={person} value={person}>
+                  {person}
+                </option>
               ))}
             </select>
-            {selectedPerson && (
-              <button
-                onClick={generateIcsFile}
-                className="px-2 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-              >
-                Download ⬇️
-              </button>
-            )}
+            <button
+              onClick={generateIcsFile}
+              disabled={!selectedPerson}
+              className={`px-4 py-2 rounded-md ${
+                selectedPerson
+                  ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                  : 'bg-gray-300 cursor-not-allowed text-gray-500'
+              } transition-colors`}
+            >
+              Baixar Calendário
+            </button>
           </div>
         </div>
       </div>

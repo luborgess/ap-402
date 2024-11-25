@@ -32,17 +32,17 @@ export const useEscalaLavanderia = () => {
   const getCurrentWeekOffset = () => {
     const today = new Date();
     const currentMonday = getMondayOfWeek(today);
-    const baseMonday = getMondayOfWeek(new Date());
+    const baseMonday = getMondayOfWeek(new Date(2024, 10, 13)); // 13/11/2024
     return Math.floor((currentMonday - baseMonday) / (7 * 24 * 60 * 60 * 1000));
   };
 
   useEffect(() => {
     setCurrentWeek(getCurrentWeekOffset());
-  }, []);
+  }, [getCurrentWeekOffset]);
 
   useEffect(() => {
     setShowBackToCurrentButton(currentWeek !== getCurrentWeekOffset());
-  }, [currentWeek]);
+  }, [currentWeek, getCurrentWeekOffset]);
 
   const showNotification = (message, duration = 3000) => {
     setNotification({ show: true, message });
@@ -51,12 +51,14 @@ export const useEscalaLavanderia = () => {
 
   // Função simplificada para obter a pessoa responsável pela data
   const getPersonForDate = (date) => {
-    const daysSinceEpoch = Math.floor(date.getTime() / (24 * 60 * 60 * 1000));
-    return RESIDENTS[daysSinceEpoch % RESIDENTS.length];
+    const baseDate = new Date(2024, 10, 13); // 13/11/2024
+    const diffDays = Math.floor((date - baseDate) / (24 * 60 * 60 * 1000));
+    return RESIDENTS[((diffDays % RESIDENTS.length) + RESIDENTS.length) % RESIDENTS.length];
   };
 
   const getWeekSchedule = (weekOffset) => {
-    const monday = getMondayOfWeek(new Date());
+    const baseMonday = getMondayOfWeek(new Date(2024, 10, 13)); // 13/11/2024
+    const monday = new Date(baseMonday);
     monday.setDate(monday.getDate() + (weekOffset * 7));
     
     return Array.from({ length: 7 }, (_, i) => {
