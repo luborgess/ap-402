@@ -4,22 +4,17 @@ import { useState, useEffect } from 'react';
 
 // Ordem correta dos residentes conforme especificado
 const RESIDENTS = [
-    'Robson',    // 1º
-    'Luiz',   // 2º
-    'Lucas',     // 3º
-    'Gabriel',    // 4º
-    'Kelvin',     // 8º
-    'Fulano',   // 7º
-    'Natan',  // 5º
-    'Bruno',   // 6º
+    'Lucas',     // 1º
+    'Gabriel',   // 2º
+    'Fulano',    // 3º
+    'Kelvin',    // 4º
+    'Natan',     // 5º
+    'Bruno',     // 6º
+    'Robson',    // 7º
+    'Luiz',      // 8º
 ];
 
 export const useEscalaLavanderia = () => {
-  const [currentWeek, setCurrentWeek] = useState(0);
-  const [notification, setNotification] = useState({ show: false, message: '' });
-  const [showBackToCurrentButton, setShowBackToCurrentButton] = useState(false);
-  const [selectedPerson, setSelectedPerson] = useState('');
-
   // Função simplificada para obter a segunda-feira da semana
   const getMondayOfWeek = (date) => {
     const d = new Date(date);
@@ -32,32 +27,24 @@ export const useEscalaLavanderia = () => {
   const getCurrentWeekOffset = () => {
     const today = new Date();
     const currentMonday = getMondayOfWeek(today);
-    const baseMonday = getMondayOfWeek(new Date(2024, 10, 13)); // 13/11/2024
+    const baseMonday = getMondayOfWeek(new Date(2024, 10, 30)); // 30/11/2024
     return Math.floor((currentMonday - baseMonday) / (7 * 24 * 60 * 60 * 1000));
   };
 
-  useEffect(() => {
-    setCurrentWeek(getCurrentWeekOffset());
-  }, [getCurrentWeekOffset]);
-
-  useEffect(() => {
-    setShowBackToCurrentButton(currentWeek !== getCurrentWeekOffset());
-  }, [currentWeek, getCurrentWeekOffset]);
-
-  const showNotification = (message, duration = 3000) => {
-    setNotification({ show: true, message });
-    setTimeout(() => setNotification({ show: false, message: '' }), duration);
-  };
+  const [currentWeek, setCurrentWeek] = useState(getCurrentWeekOffset());
+  const [notification, setNotification] = useState({ show: false, message: '' });
+  const [showBackToCurrentButton, setShowBackToCurrentButton] = useState(false);
+  const [selectedPerson, setSelectedPerson] = useState('');
 
   // Função simplificada para obter a pessoa responsável pela data
   const getPersonForDate = (date) => {
-    const baseDate = new Date(2024, 10, 13); // 13/11/2024
+    const baseDate = new Date(2024, 10, 30); // 30/11/2024
     const diffDays = Math.floor((date - baseDate) / (24 * 60 * 60 * 1000));
     return RESIDENTS[((diffDays % RESIDENTS.length) + RESIDENTS.length) % RESIDENTS.length];
   };
 
   const getWeekSchedule = (weekOffset) => {
-    const baseMonday = getMondayOfWeek(new Date(2024, 10, 13)); // 13/11/2024
+    const baseMonday = getMondayOfWeek(new Date(2024, 10, 30)); // 30/11/2024
     const monday = new Date(baseMonday);
     monday.setDate(monday.getDate() + (weekOffset * 7));
     
@@ -168,6 +155,15 @@ END:VCALENDAR`;
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
   };
+
+  const showNotification = (message, duration = 3000) => {
+    setNotification({ show: true, message });
+    setTimeout(() => setNotification({ show: false, message: '' }), duration);
+  };
+
+  useEffect(() => {
+    setShowBackToCurrentButton(currentWeek !== getCurrentWeekOffset());
+  }, [currentWeek]);
 
   return {
     currentWeek,
