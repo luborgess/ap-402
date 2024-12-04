@@ -107,7 +107,7 @@ const EscalaIntegrada = () => {
               </div>
               <div className="ml-3">
                 <p className="text-sm text-yellow-700">
-                  <span className="font-medium">Aviso do Regime Totalitário de Limpeza™:</span> Não, não é uma ditadura! 😅 Estamos apenas em manutenção para garantir que ninguém escape da sua vez de limpar. Prometemos que a democracia da limpeza voltará em breve! 🧹✨
+                  <span className="font-medium">Aviso de Manutenção:</span> O sistema de limpeza está passando por manutenção programada. Algumas funcionalidades podem estar temporariamente indisponíveis.
                 </p>
               </div>
             </div>
