@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { Card } from '@/components/ui/card';
@@ -15,6 +15,26 @@ export default function Auth() {
   const [isSignUp, setIsSignUp] = useState(false);
   const [error, setError] = useState(null);
 
+  useEffect(() => {
+    // Verificar se já existe uma sessão
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        router.push('/');
+      }
+    });
+
+    // Escutar mudanças de auth
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session) {
+        router.push('/');
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [router]);
+
   const handleAuth = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -25,6 +45,9 @@ export default function Auth() {
         ? await supabase.auth.signUp({
             email,
             password,
+            options: {
+              emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`
+            }
           })
         : await supabase.auth.signInWithPassword({
             email,
@@ -35,13 +58,30 @@ export default function Auth() {
       
       if (isSignUp && data?.user) {
         alert('Verifique seu email para confirmar o cadastro!');
-      } else if (!isSignUp && data?.user) {
-        router.push('/');
       }
     } catch (error) {
       setError(error.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          }
+        }
+      });
+
+      if (error) throw error;
+    } catch (error) {
+      setError(error.message);
     }
   };
 
@@ -112,22 +152,12 @@ export default function Auth() {
                   ? 'Criar Conta'
                   : 'Entrar'}
               </Button>
+              
               <Button
                 type="button"
                 variant="outline"
                 className="w-full bg-white/5 border-gray-700 text-white hover:bg-white/10 hover:text-white space-x-2 h-11"
-                onClick={() => {
-                  supabase.auth.signInWithOAuth({
-                    provider: 'google',
-                    options: {
-                      redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`,
-                      queryParams: {
-                        access_type: 'offline',
-                        prompt: 'consent'
-                      }
-                    }
-                  });
-                }}
+                onClick={handleGoogleSignIn}
               >
                 <svg viewBox="0 0 24 24" className="w-5 h-5">
                   <path
