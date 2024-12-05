@@ -91,7 +91,8 @@ const EscalaIntegrada = () => {
                 Novidades em Desenvolvimento:
               </h2>
               <ul className="text-blue-700 text-sm space-y-2">
-                <li>✨ Sistema de autenticação de usuários</li>
+                <li>✨ Sistema de autenticação de usuários ✅ Update: 05/12/2024</li>
+                <li>👤 Perfil do usuário ✅ Update: 05/12/2024</li>
                 <li>💾 Persistência de dados</li>
                 <li>🔄 Sincronização em tempo real</li>
               </ul>

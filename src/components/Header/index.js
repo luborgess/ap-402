@@ -6,21 +6,35 @@ import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/lib/supabase';
+import Image from 'next/image';
 
 export default function Header() {
   const { user, signOut } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [profile, setProfile] = useState(null);
+  const [avatarUrl, setAvatarUrl] = useState(null);
 
   useEffect(() => {
     const fetchProfile = async () => {
       if (user?.id) {
         const { data } = await supabase
           .from('profiles')
-          .select('name')
+          .select('name, avatar')
           .eq('id', user.id)
           .single();
+        
         setProfile(data);
+        
+        if (data?.avatar) {
+          const { data: avatarData } = await supabase
+            .storage
+            .from('avatars')
+            .getPublicUrl(data.avatar);
+            
+          if (avatarData) {
+            setAvatarUrl(avatarData.publicUrl);
+          }
+        }
       }
     };
 
@@ -85,13 +99,21 @@ export default function Header() {
                 </span>
               </div>
               <Link href="/perfil">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="text-gray-600 hover:text-gray-900"
-                >
-                  <User className="h-5 w-5" />
-                </Button>
+                <div className="relative w-9 h-9 overflow-hidden rounded-full bg-gray-100 border border-gray-200 hover:border-blue-500 transition-colors">
+                  {avatarUrl ? (
+                    <Image
+                      src={avatarUrl}
+                      alt="Avatar"
+                      width={36}
+                      height={36}
+                      className="object-cover w-full h-full"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <User className="w-5 h-5 text-gray-400" />
+                    </div>
+                  )}
+                </div>
               </Link>
               <Button
                 variant="ghost"
@@ -147,7 +169,17 @@ export default function Header() {
                     onClick={() => setIsOpen(false)}
                   >
                     <div className="flex items-center gap-3">
-                      <User className="h-5 w-5" />
+                      {avatarUrl ? (
+                        <Image
+                          src={avatarUrl}
+                          alt="Avatar"
+                          width={20}
+                          height={20}
+                          className="rounded-full"
+                        />
+                      ) : (
+                        <User className="h-5 w-5" />
+                      )}
                       <span>Perfil</span>
                     </div>
                   </Link>
