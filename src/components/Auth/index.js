@@ -1,12 +1,14 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 
 export default function Auth() {
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -33,6 +35,8 @@ export default function Auth() {
       
       if (isSignUp && data?.user) {
         alert('Verifique seu email para confirmar o cadastro!');
+      } else if (!isSignUp && data?.user) {
+        router.push('/');
       }
     } catch (error) {
       setError(error.message);
@@ -117,7 +121,11 @@ export default function Auth() {
                 supabase.auth.signInWithOAuth({
                   provider: 'google',
                   options: {
-                    redirectTo: `${window.location.origin}/auth/callback`
+                    redirectTo: `${window.location.origin}/auth/callback`,
+                    queryParams: {
+                      access_type: 'offline',
+                      prompt: 'consent'
+                    }
                   }
                 });
               }}

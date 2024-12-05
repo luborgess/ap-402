@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Home, Calendar, Settings, LogOut, User, Menu, X } from 'lucide-react';
+import { Home, Calendar, Settings, LogOut, User, Menu, X, CheckCircle2 } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -71,6 +71,13 @@ export default function Header() {
             >
               <Calendar className="h-5 w-5" />
               <span className="text-sm">Calendário</span>
+            </Link>
+            <Link 
+              href="/tarefas" 
+              className="nav-link flex items-center gap-2 text-gray-600 hover:text-gray-900"
+            >
+              <CheckCircle2 className="h-5 w-5" />
+              <span className="text-sm">Tarefas</span>
             </Link>
             <Link 
               href="/configuracoes" 
@@ -149,6 +156,16 @@ export default function Header() {
                 <div className="flex items-center gap-3">
                   <Calendar className="h-5 w-5" />
                   <span>Calendário</span>
+                </div>
+              </Link>
+              <Link
+                href="/tarefas"
+                className="block px-3 py-2 rounded-md text-base font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+                onClick={() => setIsOpen(false)}
+              >
+                <div className="flex items-center gap-3">
+                  <CheckCircle2 className="h-5 w-5" />
+                  <span>Tarefas</span>
                 </div>
               </Link>
               <Link
