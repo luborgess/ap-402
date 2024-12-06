@@ -52,16 +52,16 @@ export function TaskList({ tasks, loading, onTaskCompleted }) {
       if (error) throw error;
       
       const usersMap = {};
-      profiles.forEach(profile => {
-        const avatarUrl = profile.avatar 
-          ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/avatars/${profile.avatar}`
-          : null;
+      for (const profile of profiles) {
+        const { data: avatarData } = profile.avatar 
+          ? await supabase.storage.from('avatars').getPublicUrl(profile.avatar)
+          : { data: null };
 
         usersMap[profile.id] = {
           name: profile.full_name || profile.name,
-          avatarUrl: avatarUrl
+          avatarUrl: avatarData?.publicUrl || null
         };
-      });
+      }
       setUsers(usersMap);
     } catch (error) {
       console.error('Error fetching users:', error.message);
