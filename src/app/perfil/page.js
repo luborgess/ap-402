@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
+import Auth from '@/components/Auth';
 import { supabase } from '@/lib/supabase';
 import {
   Card,
