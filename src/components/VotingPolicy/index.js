@@ -1,42 +1,48 @@
 'use client';
 
-import { Info } from 'lucide-react';
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
+import { Users, CheckCircle2, XCircle, MinusCircle } from 'lucide-react';
 
 export default function VotingPolicy() {
   return (
-    <Collapsible className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg p-6">
-      <CollapsibleTrigger className="flex items-center gap-2 w-full text-left">
-        <Info className="w-5 h-5 text-purple-400" />
+    <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg p-4 sm:p-6">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-4">
+        <div className="bg-blue-500/10 p-2 rounded-full w-fit">
+          <Users className="w-5 h-5 sm:w-6 sm:h-6 text-blue-400" />
+        </div>
         <div>
           <h3 className="text-lg font-semibold text-white">Política de Votação</h3>
-          <p className="text-sm text-gray-400">Clique para ver as regras de votação</p>
+          <p className="text-sm text-gray-400 mt-0.5">Regras para aprovação de propostas</p>
         </div>
-      </CollapsibleTrigger>
-      <CollapsibleContent className="mt-4 space-y-4">
-        <div>
-          <h4 className="text-md font-medium text-white mb-2">Aprovação de Propostas</h4>
-          <ul className="list-disc list-inside space-y-2 text-gray-400">
-            <li>Uma proposta é <span className="text-green-400">aprovada</span> quando atinge 65% ou mais de aprovação dos votos válidos</li>
-            <li>Uma proposta é <span className="text-red-400">rejeitada</span> quando atinge 70% ou mais de rejeição dos votos válidos</li>
-            <li>Votos de <span className="text-yellow-400">abstenção</span> não são contabilizados no cálculo de aprovação</li>
-          </ul>
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="flex items-start gap-3 bg-gray-900/50 rounded-lg p-3">
+          <div className="mt-1">
+            <CheckCircle2 className="w-5 h-5 text-green-400" />
+          </div>
+          <div>
+            <p className="text-green-400 font-medium">Aprovação</p>
+            <p className="text-sm text-gray-400">Requer 65% ou mais de votos favoráveis</p>
+          </div>
         </div>
-        
-        <div>
-          <h4 className="text-md font-medium text-white mb-2">Regras Gerais</h4>
-          <ul className="list-disc list-inside space-y-2 text-gray-400">
-            <li>Cada morador tem direito a um voto por proposta</li>
-            <li>Os votos podem ser alterados a qualquer momento</li>
-            <li>O criador da proposta pode excluí-la antes da aprovação</li>
-            <li>Propostas aprovadas ou rejeitadas não podem ser modificadas</li>
-          </ul>
+        <div className="flex items-start gap-3 bg-gray-900/50 rounded-lg p-3">
+          <div className="mt-1">
+            <XCircle className="w-5 h-5 text-red-400" />
+          </div>
+          <div>
+            <p className="text-red-400 font-medium">Rejeição</p>
+            <p className="text-sm text-gray-400">Ocorre com 70% ou mais de votos contrários</p>
+          </div>
         </div>
-      </CollapsibleContent>
-    </Collapsible>
+        <div className="flex items-start gap-3 bg-gray-900/50 rounded-lg p-3 sm:col-span-2 lg:col-span-1">
+          <div className="mt-1">
+            <MinusCircle className="w-5 h-5 text-yellow-400" />
+          </div>
+          <div>
+            <p className="text-yellow-400 font-medium">Abstenções</p>
+            <p className="text-sm text-gray-400">Não são contabilizadas no resultado final</p>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }

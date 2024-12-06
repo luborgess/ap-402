@@ -6,8 +6,9 @@ import { ptBR } from 'date-fns/locale';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '../ui/button';
-import { ThumbsUp, ThumbsDown, Users, Calendar, AlertTriangle, CheckCircle2, XCircle, Trash2, MinusCircle } from 'lucide-react';
+import { ThumbsUp, ThumbsDown, MinusCircle, CheckCircle2, XCircle } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,15 +18,15 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "../ui/alert-dialog";
-import { Progress } from "../ui/progress";
 
-export default function ProposalList({ proposals, onUpdate }) {
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://ymldbdtphzcetkfinykt.supabase.co';
+
+export default function ProposalList({ proposals, onUpdate, users }) {
   const { user } = useAuth();
-  const [votingProposal, setVotingProposal] = useState(null);
   const [showDialog, setShowDialog] = useState(false);
   const [currentVote, setCurrentVote] = useState(null);
+  const [votingProposal, setVotingProposal] = useState(null);
 
   const handleVoteClick = (proposal, vote) => {
     setVotingProposal(proposal);
@@ -72,12 +73,8 @@ export default function ProposalList({ proposals, onUpdate }) {
       }
 
       if (error) {
-        if (error.message?.includes('already approved or rejected')) {
-          toast.error('Não é possível votar em propostas já aprovadas ou rejeitadas');
-        } else {
-          toast.error('Erro ao registrar voto. Tente novamente.');
-        }
         console.error('Error voting:', error);
+        toast.error('Erro ao registrar voto. Tente novamente.');
         return;
       }
 
@@ -93,38 +90,6 @@ export default function ProposalList({ proposals, onUpdate }) {
     }
   };
 
-  const handleDeleteProposal = async (proposal) => {
-    try {
-      if (!proposal?.id || !user?.id) {
-        toast.error('Dados inválidos para exclusão');
-        return;
-      }
-
-      if (proposal.created_by !== user.id) {
-        toast.error('Você só pode excluir suas próprias propostas');
-        return;
-      }
-
-      // Tenta excluir a proposta
-      const { error } = await supabase
-        .from('proposals')
-        .delete()
-        .match({ id: proposal.id });
-
-      if (error) {
-        console.error('Erro ao excluir:', error);
-        toast.error('Erro ao excluir proposta');
-        return;
-      }
-
-      toast.success('Proposta excluída com sucesso!');
-      onUpdate();
-    } catch (error) {
-      console.error('Erro:', error);
-      toast.error('Erro ao excluir proposta');
-    }
-  };
-
   const getVoteStats = (votes) => {
     if (!votes || votes.length === 0) return { approve: 0, reject: 0, abstain: 0, total: 0 };
     
@@ -137,7 +102,7 @@ export default function ProposalList({ proposals, onUpdate }) {
   };
 
   const getVoteStatus = (proposal) => {
-    if (!proposal.votes) return null;
+    if (!proposal.votes) return 'pending';
     
     const stats = getVoteStats(proposal.votes);
     const validVotes = stats.total - stats.abstain;
@@ -145,77 +110,35 @@ export default function ProposalList({ proposals, onUpdate }) {
     if (validVotes === 0) return 'pending';
     
     const approvalRate = (stats.approve / validVotes) * 100;
+    const rejectionRate = (stats.reject / validVotes) * 100;
     
     if (approvalRate >= 65) {
       return 'approved';
-    } else if (stats.reject / validVotes >= 0.7) {
+    } else if (rejectionRate >= 70) {
       return 'rejected';
     }
     return 'pending';
   };
 
   const getUserVote = (proposal) => {
-    if (!proposal.votes) return null;
+    if (!proposal.votes) return undefined;
     const userVote = proposal.votes.find(v => v.user_id === user.id);
     return userVote ? userVote.vote : undefined;
   };
 
   if (proposals.length === 0) {
     return (
-      <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg p-8 text-center flex flex-col items-center">
-        <AlertTriangle className="w-16 h-16 text-yellow-500 mb-4" />
-        <h3 className="text-xl font-semibold text-white mb-3">Nenhuma proposta em votação</h3>
-        <div className="max-w-md mx-auto space-y-4">
-          <p className="text-gray-400">
-            Não há propostas para votação no momento. Você pode criar uma nova proposta para iniciar uma votação.
-          </p>
-          <div className="text-sm text-gray-500">
-            <p className="mb-2">• Propostas são aprovadas com 65% dos votos favoráveis</p>
-            <p className="mb-2">• Propostas são rejeitadas com 70% dos votos contrários</p>
-            <p>• Abstenções não são contabilizadas no cálculo final</p>
-          </div>
-        </div>
+      <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg p-8 text-center">
+        <h3 className="text-xl font-semibold text-white mb-2">Nenhuma proposta em votação</h3>
+        <p className="text-gray-400">
+          Não há propostas para votação no momento. Você pode criar uma nova proposta para iniciar uma votação.
+        </p>
       </div>
     );
   }
 
   return (
     <div className="space-y-4">
-      <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg p-6">
-        <div className="flex items-center gap-3 mb-4">
-          <Users className="w-6 h-6 text-blue-400" />
-          <h3 className="text-lg font-semibold text-white">Política de Votação</h3>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="flex items-start gap-3">
-            <div className="mt-1">
-              <CheckCircle2 className="w-5 h-5 text-green-400" />
-            </div>
-            <div>
-              <p className="text-green-400 font-medium">Aprovação</p>
-              <p className="text-sm text-gray-400">Requer 65% ou mais de votos favoráveis</p>
-            </div>
-          </div>
-          <div className="flex items-start gap-3">
-            <div className="mt-1">
-              <XCircle className="w-5 h-5 text-red-400" />
-            </div>
-            <div>
-              <p className="text-red-400 font-medium">Rejeição</p>
-              <p className="text-sm text-gray-400">Ocorre com 70% ou mais de votos contrários</p>
-            </div>
-          </div>
-          <div className="flex items-start gap-3">
-            <div className="mt-1">
-              <MinusCircle className="w-5 h-5 text-yellow-400" />
-            </div>
-            <div>
-              <p className="text-yellow-400 font-medium">Abstenções</p>
-              <p className="text-sm text-gray-400">Não são contabilizadas no resultado final</p>
-            </div>
-          </div>
-        </div>
-      </div>
       {proposals.map((proposal) => {
         const stats = getVoteStats(proposal.votes);
         const status = getVoteStatus(proposal);
@@ -224,144 +147,244 @@ export default function ProposalList({ proposals, onUpdate }) {
         const approvalRate = validVotes > 0 ? (stats.approve / validVotes) * 100 : 0;
 
         return (
-          <div
-            key={proposal.id}
-            className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg p-6"
-          >
-            {/* Status Badge and Delete Button */}
-            <div className="flex justify-between items-start mb-4">
-              <div className="flex items-start gap-4">
-                <h3 className="text-lg font-semibold text-white">{proposal.title}</h3>
-                {status && (
-                  <span className={`
-                    px-3 py-1 rounded-full text-sm font-medium
-                    ${status === 'approved' ? 'bg-green-500/20 text-green-300' :
-                      status === 'rejected' ? 'bg-red-500/20 text-red-300' :
-                      'bg-yellow-500/20 text-yellow-300'}
-                  `}>
-                    {status === 'approved' ? 'Aprovada' :
-                     status === 'rejected' ? 'Rejeitada' :
-                     'Em votação'}
-                  </span>
+          <div key={proposal.id} className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg p-4 sm:p-6">
+            <div className="flex flex-col gap-4">
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex-1">
+                  <h3 className="text-lg font-semibold text-white">{proposal.title}</h3>
+                  <p className="text-gray-400 mt-1">{proposal.description}</p>
+                  <div className="flex flex-wrap items-center gap-2 mt-2 text-sm text-gray-500">
+                    <span>Criado por {users.find(u => u.id === proposal.created_by)?.name || 'Usuário'}</span>
+                    <span>•</span>
+                    <span>{format(new Date(proposal.created_at), "dd 'de' MMMM 'às' HH:mm", { locale: ptBR })}</span>
+                  </div>
+                </div>
+
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <Button
+                    variant="outline"
+                    className={`flex-1 ${
+                      userVote === true
+                        ? 'bg-green-500/20 text-green-300 border-green-500/30'
+                        : 'bg-gray-900/50 text-gray-300 border-gray-700 hover:bg-green-500/20 hover:text-green-300'
+                    }`}
+                    onClick={() => handleVoteClick(proposal, true)}
+                  >
+                    <ThumbsUp className="w-4 h-4 sm:mr-2" />
+                    <span className="hidden sm:inline">Aprovar</span>
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className={`flex-1 ${
+                      userVote === null
+                        ? 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30'
+                        : 'bg-gray-900/50 text-gray-300 border-gray-700 hover:bg-yellow-500/20 hover:text-yellow-300'
+                    }`}
+                    onClick={() => handleVoteClick(proposal, null)}
+                  >
+                    <MinusCircle className="w-4 h-4 sm:mr-2" />
+                    <span className="hidden sm:inline">Abster-se</span>
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className={`flex-1 ${
+                      userVote === false
+                        ? 'bg-red-500/20 text-red-300 border-red-500/30'
+                        : 'bg-gray-900/50 text-gray-300 border-gray-700 hover:bg-red-500/20 hover:text-red-300'
+                    }`}
+                    onClick={() => handleVoteClick(proposal, false)}
+                  >
+                    <ThumbsDown className="w-4 h-4 sm:mr-2" />
+                    <span className="hidden sm:inline">Rejeitar</span>
+                  </Button>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-1.5">
+                      <ThumbsUp className="w-4 h-4 text-green-400" />
+                      <span className="text-green-400">{stats.approve}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <ThumbsDown className="w-4 h-4 text-red-400" />
+                      <span className="text-red-400">{stats.reject}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <MinusCircle className="w-4 h-4 text-yellow-400" />
+                      <span className="text-yellow-400">{stats.abstain}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    {status === 'pending' && (
+                      <span className="text-gray-400">
+                        {approvalRate.toFixed(1)}% de aprovação
+                      </span>
+                    )}
+                    {status === 'approved' && (
+                      <div className="flex items-center gap-2 text-green-400">
+                        <CheckCircle2 className="w-4 h-4" />
+                        <span>Proposta Aprovada</span>
+                      </div>
+                    )}
+                    {status === 'rejected' && (
+                      <div className="flex items-center gap-2 text-red-400">
+                        <XCircle className="w-4 h-4" />
+                        <span>Proposta Rejeitada</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="h-2 bg-gray-700 rounded-full overflow-hidden">
+                  <div
+                    className={`h-full transition-all duration-300 ${
+                      approvalRate >= 65 ? 'bg-green-400' : 'bg-blue-400'
+                    }`}
+                    style={{ width: `${approvalRate}%` }}
+                  />
+                </div>
+
+                {/* Lista de Votos */}
+                {proposal.votes && proposal.votes.length > 0 && (
+                  <div className="pt-4 border-t border-gray-700/50">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      {/* Votos de Aprovação */}
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2 text-green-400">
+                          <ThumbsUp className="w-4 h-4" />
+                          <span className="text-sm font-medium">Aprovaram</span>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {proposal.votes
+                            .filter(vote => vote.vote === true)
+                            .map(vote => {
+                              const voter = users.find(u => u.id === vote.user_id);
+                              return (
+                                <div key={vote.id} className="flex items-center gap-2 bg-gray-800/50 rounded-full pl-1 pr-3 py-1">
+                                  <Avatar className="h-6 w-6">
+                                    <AvatarImage 
+                                      src={voter?.avatar ? `${SUPABASE_URL}/storage/v1/object/public/avatars/${voter.avatar}` : null} 
+                                      alt={voter?.name} 
+                                      onError={(e) => {
+                                        console.log('Erro ao carregar avatar:', voter?.avatar);
+                                        console.log('URL completa:', e.target.src);
+                                        e.target.src = null;
+                                      }}
+                                    />
+                                    <AvatarFallback>{voter?.name?.charAt(0)?.toUpperCase()}</AvatarFallback>
+                                  </Avatar>
+                                  <span className="text-sm text-gray-300">{voter?.name}</span>
+                                </div>
+                              );
+                            })}
+                        </div>
+                      </div>
+
+                      {/* Votos de Rejeição */}
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2 text-red-400">
+                          <ThumbsDown className="w-4 h-4" />
+                          <span className="text-sm font-medium">Rejeitaram</span>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {proposal.votes
+                            .filter(vote => vote.vote === false)
+                            .map(vote => {
+                              const voter = users.find(u => u.id === vote.user_id);
+                              return (
+                                <div key={vote.id} className="flex items-center gap-2 bg-gray-800/50 rounded-full pl-1 pr-3 py-1">
+                                  <Avatar className="h-6 w-6">
+                                    <AvatarImage 
+                                      src={voter?.avatar ? `${SUPABASE_URL}/storage/v1/object/public/avatars/${voter.avatar}` : null} 
+                                      alt={voter?.name} 
+                                      onError={(e) => {
+                                        console.log('Erro ao carregar avatar:', voter?.avatar);
+                                        console.log('URL completa:', e.target.src);
+                                        e.target.src = null;
+                                      }}
+                                    />
+                                    <AvatarFallback>{voter?.name?.charAt(0)?.toUpperCase()}</AvatarFallback>
+                                  </Avatar>
+                                  <span className="text-sm text-gray-300">{voter?.name}</span>
+                                </div>
+                              );
+                            })}
+                        </div>
+                      </div>
+
+                      {/* Abstenções */}
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2 text-yellow-400">
+                          <MinusCircle className="w-4 h-4" />
+                          <span className="text-sm font-medium">Abstiveram-se</span>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {proposal.votes
+                            .filter(vote => vote.vote === null)
+                            .map(vote => {
+                              const voter = users.find(u => u.id === vote.user_id);
+                              return (
+                                <div key={vote.id} className="flex items-center gap-2 bg-gray-800/50 rounded-full pl-1 pr-3 py-1">
+                                  <Avatar className="h-6 w-6">
+                                    <AvatarImage 
+                                      src={voter?.avatar ? `${SUPABASE_URL}/storage/v1/object/public/avatars/${voter.avatar}` : null} 
+                                      alt={voter?.name} 
+                                      onError={(e) => {
+                                        console.log('Erro ao carregar avatar:', voter?.avatar);
+                                        console.log('URL completa:', e.target.src);
+                                        e.target.src = null;
+                                      }}
+                                    />
+                                    <AvatarFallback>{voter?.name?.charAt(0)?.toUpperCase()}</AvatarFallback>
+                                  </Avatar>
+                                  <span className="text-sm text-gray-300">{voter?.name}</span>
+                                </div>
+                              );
+                            })}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 )}
               </div>
-              {proposal.created_by === user.id && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="text-red-400 hover:text-red-300 hover:bg-red-500/10"
-                  onClick={() => handleDeleteProposal(proposal)}
-                >
-                  <Trash2 className="w-4 h-4" />
-                </Button>
-              )}
             </div>
-
-            {/* Description */}
-            <p className="text-gray-400 mb-4">{proposal.description}</p>
-
-            {/* Metadata */}
-            <div className="flex flex-wrap gap-4 text-sm text-gray-400 mb-6">
-              <div className="flex items-center gap-1.5">
-                <Calendar className="w-4 h-4" />
-                <span>
-                  Criada em {format(new Date(proposal.created_at), "dd 'de' MMMM 'às' HH:mm", { locale: ptBR })}
-                </span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <Users className="w-4 h-4" />
-                <span>{stats.total} votos</span>
-              </div>
-            </div>
-
-            {/* Progress Bar */}
-            <div className="space-y-2 mb-6">
-              <div className="flex justify-between text-sm">
-                <span className="text-green-400">{stats.approve} aprovações</span>
-                <span className="text-yellow-400">{stats.abstain} abstenções</span>
-                <span className="text-red-400">{stats.reject} rejeições</span>
-              </div>
-              <Progress value={approvalRate} className="h-2" />
-              <p className="text-sm text-gray-400 text-center">
-                {approvalRate.toFixed(1)}% de aprovação {stats.abstain > 0 && `(${stats.abstain} abstenções)`}
-              </p>
-            </div>
-
-            {/* Vote Buttons */}
-            <div className="flex gap-3">
-              <Button
-                variant="outline"
-                className={`flex-1 ${
-                  userVote === true
-                    ? 'bg-green-500/20 text-green-300 border-green-500/30'
-                    : 'bg-gray-900/50 text-gray-300 border-gray-700 hover:bg-green-500/20 hover:text-green-300'
-                }`}
-                onClick={() => handleVoteClick(proposal, true)}
-              >
-                <ThumbsUp className="w-4 h-4 mr-2" />
-                Aprovar
-              </Button>
-              <Button
-                variant="outline"
-                className={`flex-1 ${
-                  userVote === null
-                    ? 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30'
-                    : 'bg-gray-900/50 text-gray-300 border-gray-700 hover:bg-yellow-500/20 hover:text-yellow-300'
-                }`}
-                onClick={() => handleVoteClick(proposal, null)}
-              >
-                <MinusCircle className="w-4 h-4 mr-2" />
-                Abster-se
-              </Button>
-              <Button
-                variant="outline"
-                className={`flex-1 ${
-                  userVote === false
-                    ? 'bg-red-500/20 text-red-300 border-red-500/30'
-                    : 'bg-gray-900/50 text-gray-300 border-gray-700 hover:bg-red-500/20 hover:text-red-300'
-                }`}
-                onClick={() => handleVoteClick(proposal, false)}
-              >
-                <ThumbsDown className="w-4 h-4 mr-2" />
-                Rejeitar
-              </Button>
-            </div>
-
-            {/* Confirmation Dialog */}
-            <AlertDialog open={showDialog} onOpenChange={setShowDialog}>
-              <AlertDialogContent className="bg-gray-900 border border-gray-700">
-                <AlertDialogHeader>
-                  <AlertDialogTitle className="text-white">
-                    Confirmar {currentVote === true ? 'Aprovação' : currentVote === false ? 'Rejeição' : 'Abstenção'}
-                  </AlertDialogTitle>
-                  <AlertDialogDescription className="text-gray-400">
-                    {currentVote === true ? 'Você está aprovando esta proposta.' : 
-                     currentVote === false ? 'Você está rejeitando esta proposta.' :
-                     'Você está se abstendo de votar nesta proposta.'}
-                    <br />
-                    Esta ação pode ser alterada posteriormente.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel className="bg-gray-800 text-white hover:bg-gray-700">
-                    Cancelar
-                  </AlertDialogCancel>
-                  <AlertDialogAction
-                    onClick={handleVoteConfirm}
-                    className={`${
-                      currentVote === true ? 'bg-green-500 hover:bg-green-600' :
-                      currentVote === false ? 'bg-red-500 hover:bg-red-600' :
-                      'bg-yellow-500 hover:bg-yellow-600'
-                    } text-white`}
-                  >
-                    Confirmar
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
           </div>
         );
       })}
+      <AlertDialog open={showDialog} onOpenChange={setShowDialog}>
+        <AlertDialogContent className="bg-gray-900 border border-gray-700">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-white">
+              Confirmar {currentVote === true ? 'Aprovação' : currentVote === false ? 'Rejeição' : 'Abstenção'}
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-gray-400">
+              {currentVote === true ? 'Você está aprovando esta proposta.' : 
+               currentVote === false ? 'Você está rejeitando esta proposta.' :
+               'Você está se abstendo de votar nesta proposta.'}
+              <br />
+              Esta ação pode ser alterada posteriormente.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="bg-gray-800 text-white hover:bg-gray-700">
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleVoteConfirm}
+              className={`${
+                currentVote === true ? 'bg-green-500 hover:bg-green-600' :
+                currentVote === false ? 'bg-red-500 hover:bg-red-600' :
+                'bg-yellow-500 hover:bg-yellow-600'
+              } text-white`}
+            >
+              Confirmar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

@@ -14,14 +14,42 @@ import { toast } from 'react-hot-toast';
 export default function AssembleiaPage() {
   const { user } = useAuth();
   const [proposals, setProposals] = useState([]);
+  const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
 
   useEffect(() => {
     if (user) {
       fetchProposals();
+      fetchUsers();
     }
   }, [user]);
+
+  const fetchUsers = async () => {
+    try {
+      const { data: profiles, error } = await supabase
+        .from('profiles')
+        .select('id, name, full_name, avatar');
+      
+      if (error) {
+        console.error('Erro ao buscar usuários:', error.message);
+        toast.error('Erro ao carregar usuários');
+        return;
+      }
+
+      if (!profiles) {
+        console.warn('Nenhum perfil encontrado');
+        setUsers([]);
+        return;
+      }
+
+      console.log('Perfis carregados:', profiles);
+      setUsers(profiles);
+    } catch (error) {
+      console.error('Erro inesperado ao buscar usuários:', error);
+      toast.error('Erro ao carregar usuários');
+    }
+  };
 
   const fetchProposals = async () => {
     try {
@@ -30,19 +58,25 @@ export default function AssembleiaPage() {
         .from('proposals')
         .select(`
           *,
-          votes:proposal_votes(*)
+          votes:proposal_votes(
+            id,
+            user_id,
+            vote,
+            created_at
+          )
         `)
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Erro ao buscar propostas:', error);
-        throw error;
+        console.error('Erro ao buscar propostas:', error.message);
+        toast.error('Erro ao carregar propostas');
+        return;
       }
 
       console.log('Propostas recebidas:', data);
       setProposals(data || []);
     } catch (error) {
-      console.error('Error fetching proposals:', error);
+      console.error('Erro inesperado ao buscar propostas:', error);
       toast.error('Erro ao carregar propostas');
     } finally {
       setLoading(false);
@@ -90,7 +124,7 @@ export default function AssembleiaPage() {
               <Loader2 className="w-6 h-6 text-purple-500 animate-spin" />
             </div>
           ) : (
-            <ProposalList proposals={proposals} onUpdate={fetchProposals} />
+            <ProposalList proposals={proposals} users={users} onUpdate={fetchProposals} />
           )}
         </div>
       </main>
