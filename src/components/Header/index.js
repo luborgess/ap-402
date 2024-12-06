@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Home, Calendar, Settings, LogOut, User, Menu, X, Loader2, ClipboardList } from 'lucide-react';
+import { Home, Calendar, Settings, LogOut, User, Menu, X, Loader2, ClipboardList, Vote } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -99,28 +99,35 @@ export default function Header() {
               className="nav-link flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
             >
               <Home className="h-5 w-5" />
-              <span className="text-sm font-medium">Início</span>
+              <span>Início</span>
+            </Link>
+            <Link 
+              href="/assembleia" 
+              className="nav-link flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
+            >
+              <Vote className="h-5 w-5" />
+              <span>Assembleia</span>
             </Link>
             <Link 
               href="/calendario" 
               className="nav-link flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
             >
               <Calendar className="h-5 w-5" />
-              <span className="text-sm font-medium">Calendário</span>
+              <span>Calendário</span>
             </Link>
             <Link 
               href="/tarefas" 
               className="nav-link flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
             >
               <ClipboardList className="h-5 w-5" />
-              <span className="text-sm font-medium">Tarefas</span>
+              <span>Tarefas</span>
             </Link>
             <Link 
               href="/configuracoes" 
               className="nav-link flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
             >
               <Settings className="h-5 w-5" />
-              <span className="text-sm font-medium">Configurações</span>
+              <span>Configurações</span>
             </Link>
           </nav>
 
@@ -163,7 +170,15 @@ export default function Header() {
                 onClick={() => setIsOpen(false)}
               >
                 <Home className="h-5 w-5" />
-                <span className="text-sm font-medium">Início</span>
+                <span>Início</span>
+              </Link>
+              <Link 
+                href="/assembleia" 
+                className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
+                onClick={() => setIsOpen(false)}
+              >
+                <Vote className="h-5 w-5" />
+                <span>Assembleia</span>
               </Link>
               <Link 
                 href="/calendario" 
@@ -171,7 +186,7 @@ export default function Header() {
                 onClick={() => setIsOpen(false)}
               >
                 <Calendar className="h-5 w-5" />
-                <span className="text-sm font-medium">Calendário</span>
+                <span>Calendário</span>
               </Link>
               <Link 
                 href="/tarefas" 
@@ -179,7 +194,7 @@ export default function Header() {
                 onClick={() => setIsOpen(false)}
               >
                 <ClipboardList className="h-5 w-5" />
-                <span className="text-sm font-medium">Tarefas</span>
+                <span>Tarefas</span>
               </Link>
               <Link 
                 href="/configuracoes" 
@@ -187,7 +202,7 @@ export default function Header() {
                 onClick={() => setIsOpen(false)}
               >
                 <Settings className="h-5 w-5" />
-                <span className="text-sm font-medium">Configurações</span>
+                <span>Configurações</span>
               </Link>
               {user && (
                 <div className="pt-4 border-t border-gray-700/75">
