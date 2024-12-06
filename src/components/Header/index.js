@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Home, Calendar, Settings, LogOut, User, Menu, X, Loader2, ClipboardList, Vote } from 'lucide-react';
+import { Home, Calendar, Settings, LogOut, User, Menu, X, Loader2, ClipboardList, Vote, Receipt } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -123,6 +123,13 @@ export default function Header() {
               <span>Tarefas</span>
             </Link>
             <Link 
+              href="/despesas" 
+              className="nav-link flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
+            >
+              <Receipt className="h-5 w-5" />
+              <span>Despesas</span>
+            </Link>
+            <Link 
               href="/configuracoes" 
               className="nav-link flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
             >
@@ -195,6 +202,14 @@ export default function Header() {
               >
                 <ClipboardList className="h-5 w-5" />
                 <span>Tarefas</span>
+              </Link>
+              <Link 
+                href="/despesas" 
+                className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
+                onClick={() => setIsOpen(false)}
+              >
+                <Receipt className="h-5 w-5" />
+                <span>Despesas</span>
               </Link>
               <Link 
                 href="/configuracoes" 
