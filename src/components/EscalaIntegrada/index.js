@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Card } from '@/components/ui/card';
-import { Calendar, ChevronLeft, ChevronRight, CalendarDays, Wrench } from 'lucide-react';
+import { Calendar, ChevronLeft, ChevronRight, CalendarDays } from 'lucide-react';
 import { useEscalaLavanderia } from '../EscalaLavanderia/useEscalaLavanderia';
 import { WeekView } from '../EscalaLavanderia/WeekView';
 import { cn } from '@/lib/utils';
@@ -69,50 +69,6 @@ const EscalaIntegrada = () => {
         </Card>
         <Card className="bg-gray-800/50 backdrop-blur-sm border border-gray-700">
           <WeekView schedule={schedule} onAddToCalendar={handleAddToCalendar} />
-        </Card>
-      </section>
-
-      {/* Escala de Limpeza - Tela de Manutenção */}
-      <section>
-        <Card className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 p-8">
-          <div className="flex flex-col items-center justify-center gap-6 text-center">
-            <div className="bg-blue-500/10 p-4 rounded-full">
-              <Wrench className="h-12 w-12 text-blue-400" />
-            </div>
-            
-            <div className="space-y-2">
-              <h3 className="text-xl font-bold text-white">
-                Sistema em Manutenção
-              </h3>
-              <p className="text-gray-400">
-                🛠️ Estamos trabalhando em melhorias significativas para o sistema de limpeza.
-              </p>
-            </div>
-            
-            <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg p-4 w-full max-w-md">
-              <h4 className="font-semibold text-gray-200 mb-3">
-                Novidades em Desenvolvimento:
-              </h4>
-              <ul className="text-gray-400 space-y-2">
-                <li className="flex items-center gap-2">
-                  <span className="text-green-400">✓</span>
-                  Sistema de autenticação de usuários
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="text-green-400">✓</span>
-                  Perfil do usuário
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="text-blue-400">○</span>
-                  Persistência de dados
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="text-blue-400">○</span>
-                  Sincronização em tempo real
-                </li>
-              </ul>
-            </div>
-          </div>
         </Card>
       </section>
     </div>
