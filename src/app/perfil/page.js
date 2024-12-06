@@ -45,18 +45,11 @@ export default function Profile() {
     relation: ''
   });
   const [editingEmergency, setEditingEmergency] = useState(false);
-  const [newTask, setNewTask] = useState({
-    title: '',
-    description: '',
-    frequency: 'daily',
-    responsible_users: []
-  });
   const [users, setUsers] = useState([]);
 
   useEffect(() => {
     if (user) {
       getProfile();
-      fetchUsers();
     }
   }, [user]);
 
@@ -77,7 +70,14 @@ export default function Profile() {
           instagram: profile.instagram || '',
           linkedin: profile.linkedin || ''
         });
-        setBirthDate(profile.birth_date || '');
+        // Adjust the received date to local format
+        if (profile.birth_date) {
+          const date = new Date(profile.birth_date);
+          date.setDate(date.getDate() + 1);
+          setBirthDate(date.toISOString().split('T')[0]);
+        } else {
+          setBirthDate('');
+        }
         setEmergencyContact({
           name: profile.emergency_contact_name || '',
           phone: profile.emergency_contact_phone || '',
@@ -101,20 +101,6 @@ export default function Profile() {
         type: 'error',
         content: 'Erro ao carregar perfil. Por favor, tente novamente.'
       });
-    }
-  }
-
-  async function fetchUsers() {
-    try {
-      const { data: profiles, error } = await supabase
-        .from('profiles')
-        .select('id, name');
-      
-      if (error) throw error;
-      setUsers(profiles || []);
-    } catch (error) {
-      console.error('Error fetching users:', error);
-      toast.error('Erro ao carregar usuários');
     }
   }
 
@@ -239,10 +225,16 @@ export default function Profile() {
   async function handleBirthDateUpdate() {
     try {
       setLoading(true);
+      
+      // Ajusta a data para o fuso horário de São Paulo
+      const [year, month, day] = birthDate.split('-');
+      const adjustedDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day) + 1);
+      const formattedDate = adjustedDate.toISOString().split('T')[0];
+      
       const { error } = await supabase
         .from('profiles')
         .update({ 
-          birth_date: birthDate,
+          birth_date: formattedDate,
           updated_at: new Date().toISOString()
         })
         .eq('id', user.id);
@@ -322,34 +314,6 @@ export default function Profile() {
       });
     } finally {
       setUploadLoading(false);
-    }
-  }
-
-  async function handleCreateTask(e) {
-    e.preventDefault();
-    setLoading(true);
-
-    try {
-      const { error } = await supabase.from('tasks').insert({
-        ...newTask,
-        created_by: user.id,
-        next_date: new Date().toISOString(),
-      });
-
-      if (error) throw error;
-
-      toast.success('Tarefa criada com sucesso!');
-      setNewTask({
-        title: '',
-        description: '',
-        frequency: 'daily',
-        responsible_users: []
-      });
-    } catch (error) {
-      console.error('Error creating task:', error);
-      toast.error('Erro ao criar tarefa');
-    } finally {
-      setLoading(false);
     }
   }
 
@@ -626,11 +590,15 @@ export default function Profile() {
             ) : (
               <div className="text-gray-400">
                 {birthDate ? (
-                  new Date(birthDate).toLocaleDateString('pt-BR', {
-                    day: '2-digit',
-                    month: 'long',
-                    year: 'numeric'
-                  })
+                  (() => {
+                    const [year, month, day] = birthDate.split('-');
+                    const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+                    return date.toLocaleDateString('pt-BR', {
+                      day: '2-digit',
+                      month: 'long',
+                      year: 'numeric'
+                    });
+                  })()
                 ) : (
                   'Adicionar data de nascimento'
                 )}
@@ -715,103 +683,6 @@ export default function Profile() {
               </div>
             )}
           </Card>
-
-          {/* Card de Criação de Tarefas */}
-          <div className="max-w-3xl mx-auto mt-8">
-            <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-gray-800">
-              <div className="flex items-center gap-4 mb-6">
-                <div className="p-3 bg-purple-500/10 rounded-lg">
-                  <Plus className="h-6 w-6 text-purple-400" />
-                </div>
-                <div className="flex-1">
-                  <h2 className="text-xl font-bold text-white">Nova Tarefa</h2>
-                  <p className="text-gray-400">Crie uma nova tarefa para a equipe</p>
-                </div>
-              </div>
-
-              <form onSubmit={handleCreateTask} className="space-y-6">
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="title" className="text-white">Título</Label>
-                    <Input
-                      id="title"
-                      value={newTask.title}
-                      onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
-                      placeholder="Digite o título da tarefa"
-                      className="bg-gray-900/50 border-gray-700 text-white"
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="description" className="text-white">Descrição</Label>
-                    <Input
-                      id="description"
-                      value={newTask.description}
-                      onChange={(e) => setNewTask({ ...newTask, description: e.target.value })}
-                      placeholder="Digite a descrição da tarefa"
-                      className="bg-gray-900/50 border-gray-700 text-white"
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="frequency" className="text-white">Frequência</Label>
-                    <select
-                      id="frequency"
-                      value={newTask.frequency}
-                      onChange={(e) => setNewTask({ ...newTask, frequency: e.target.value })}
-                      className="w-full p-2 rounded-md bg-gray-900/50 border border-gray-700 text-white"
-                      required
-                    >
-                      <option value="daily">Diária</option>
-                      <option value="weekly">Semanal</option>
-                      <option value="monthly">Mensal</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <Label htmlFor="responsible_users" className="text-white">Responsáveis</Label>
-                    <select
-                      id="responsible_users"
-                      multiple
-                      value={newTask.responsible_users}
-                      onChange={(e) => {
-                        const selectedUsers = Array.from(e.target.selectedOptions, option => option.value);
-                        setNewTask({ ...newTask, responsible_users: selectedUsers });
-                      }}
-                      className="w-full p-2 rounded-md bg-gray-900/50 border border-gray-700 text-white"
-                      required
-                    >
-                      {users.map((user) => (
-                        <option key={user.id} value={user.id}>
-                          {user.name || user.id}
-                        </option>
-                      ))}
-                    </select>
-                    <p className="text-sm text-gray-400 mt-1">
-                      Segure Ctrl para selecionar múltiplos usuários
-                    </p>
-                  </div>
-                </div>
-
-                <Button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full bg-purple-500 hover:bg-purple-600 text-white"
-                >
-                  {loading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Criando...
-                    </>
-                  ) : (
-                    'Criar Tarefa'
-                  )}
-                </Button>
-              </form>
-            </div>
-          </div>
 
           {/* Estatísticas */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
