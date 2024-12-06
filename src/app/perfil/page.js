@@ -267,34 +267,43 @@ export default function Profile() {
 
       const file = event.target.files[0];
       const fileExt = file.name.split('.').pop();
-      const fileName = `${user.id}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+      // Usando o ID do usuário como parte do caminho do arquivo
+      const filePath = `${user.id}/${Math.random().toString(36).substring(2)}.${fileExt}`;
 
-      // Upload do arquivo
+      // Primeiro fazemos o upload do arquivo
       const { error: uploadError } = await supabase.storage
         .from('avatars')
-        .upload(fileName, file);
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: true
+        });
 
       if (uploadError) {
-        throw uploadError;
+        throw new Error(`Erro no upload: ${uploadError.message}`);
       }
 
-      // Atualizar perfil com o caminho do arquivo
+      // Se o upload foi bem sucedido, atualizamos o perfil
       const { error: updateError } = await supabase
         .from('profiles')
-        .update({ 
-          avatar: fileName,
+        .upsert({ 
+          id: user.id,
+          avatar: filePath,
           updated_at: new Date().toISOString()
-        })
-        .eq('id', user.id);
+        });
 
       if (updateError) {
-        throw updateError;
+        // Se falhar ao atualizar o perfil, tentamos remover o arquivo
+        await supabase.storage
+          .from('avatars')
+          .remove([filePath]);
+          
+        throw new Error(`Erro ao atualizar perfil: ${updateError.message}`);
       }
 
       // Obter URL pública
       const { data: urlData } = await supabase.storage
         .from('avatars')
-        .getPublicUrl(fileName);
+        .getPublicUrl(filePath);
 
       if (!urlData?.publicUrl) {
         throw new Error('Erro ao obter URL da imagem');
@@ -310,7 +319,7 @@ export default function Profile() {
       console.error('Upload error:', error);
       setMessage({ 
         type: 'error', 
-        content: error.message || 'Erro ao atualizar foto de perfil' 
+        content: `Erro ao atualizar foto de perfil: ${error.message}` 
       });
     } finally {
       setUploadLoading(false);
@@ -729,7 +738,7 @@ export default function Profile() {
               </div>
               <div className="bg-gray-900/50 rounded-lg p-4">
                 <p className="text-gray-400 text-sm mb-1">Bloco</p>
-                <p className="text-white">A</p>
+                <p className="text-white">5</p>
               </div>
             </div>
           </Card>

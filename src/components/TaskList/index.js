@@ -21,10 +21,18 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "../ui/alert-dialog"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "../ui/tooltip"
+import { Avatar, AvatarImage, AvatarFallback } from "../ui/avatar"
 
 export function TaskList({ tasks, loading, onTaskCompleted }) {
   const { user } = useAuth();
   const [users, setUsers] = useState({});
+  const [userHistory, setUserHistory] = useState({});
   const [viewMode, setViewMode] = useState('active'); // 'active' or 'mine'
   const [completingTask, setCompletingTask] = useState(null);
   const [taskToComplete, setTaskToComplete] = useState(null);
@@ -32,25 +40,74 @@ export function TaskList({ tasks, loading, onTaskCompleted }) {
 
   useEffect(() => {
     fetchUsers();
+    fetchTaskHistory();
   }, []);
 
   const fetchUsers = async () => {
     try {
       const { data: profiles, error } = await supabase
         .from('profiles')
-        .select('id, name');
+        .select('id, name, full_name, avatar');
       
       if (error) throw error;
       
       const usersMap = {};
       profiles.forEach(profile => {
-        usersMap[profile.id] = profile.name;
+        const avatarUrl = profile.avatar 
+          ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/avatars/${profile.avatar}`
+          : null;
+
+        usersMap[profile.id] = {
+          name: profile.full_name || profile.name,
+          avatarUrl: avatarUrl
+        };
       });
       setUsers(usersMap);
     } catch (error) {
-      console.error('Error fetching users:', error);
+      console.error('Error fetching users:', error.message);
       toast.error('Erro ao carregar usuários');
     }
+  };
+
+  const fetchTaskHistory = async () => {
+    try {
+      const { data: history, error } = await supabase
+        .from('task_history')
+        .select('*')
+        .order('completed_at', { ascending: false });
+
+      if (error) throw error;
+
+      const historyMap = {};
+      history.forEach(record => {
+        if (!historyMap[record.task_id]) {
+          historyMap[record.task_id] = {};
+        }
+        if (!historyMap[record.task_id][record.completed_by]) {
+          historyMap[record.task_id][record.completed_by] = record.completed_at;
+        }
+      });
+
+      setUserHistory(historyMap);
+    } catch (error) {
+      console.error('Error fetching task history:', error);
+    }
+  };
+
+  const getLastCompletionDate = (taskId, userId) => {
+    return userHistory[taskId]?.[userId] 
+      ? format(new Date(userHistory[taskId][userId]), "'Última conclusão:' dd 'de' MMMM", { locale: ptBR })
+      : 'Ainda não concluiu esta tarefa';
+  };
+
+  const getUserInitials = (name) => {
+    if (!name) return '??';
+    return name
+      .split(' ')
+      .map(part => part[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
   };
 
   const filteredTasks = tasks.filter(task => {
@@ -223,20 +280,54 @@ export function TaskList({ tasks, loading, onTaskCompleted }) {
                     </div>
                     <div className="flex items-center gap-1.5 flex-wrap">
                       <Users className="h-4 w-4 shrink-0" />
-                      <div className="flex flex-wrap gap-1">
-                        {task.responsible_users?.map((userId, index) => (
-                          <span 
-                            key={userId} 
-                            className={cn(
-                              "max-w-[150px] truncate",
-                              index === 0 && "text-green-600 font-medium"
-                            )}
-                            title={users[userId]} // Adiciona tooltip com nome completo
-                          >
-                            {users[userId]}
-                            {index < task.responsible_users.length - 1 && ", "}
-                          </span>
-                        ))}
+                      <div className="flex flex-wrap gap-2 items-center">
+                        <TooltipProvider>
+                          {task.responsible_users?.map((userId, index) => {
+                            const userInfo = users[userId];
+                            if (!userInfo) return null;
+
+                            return (
+                              <Tooltip key={userId}>
+                                <TooltipTrigger asChild>
+                                  <div className={cn(
+                                    "flex items-center gap-2 px-2 py-1 rounded-full",
+                                    index === 0 && "bg-green-500/20 text-green-300",
+                                    index === 1 && "bg-blue-500/20 text-blue-300",
+                                    index > 1 && "bg-gray-700/50 text-gray-300"
+                                  )}>
+                                    <Avatar className="h-6 w-6">
+                                      <AvatarImage 
+                                        src={userInfo.avatarUrl} 
+                                        alt={userInfo.name} 
+                                      />
+                                      <AvatarFallback className="text-xs">
+                                        {getUserInitials(userInfo.name)}
+                                      </AvatarFallback>
+                                    </Avatar>
+                                    <span className="text-sm">
+                                      {userInfo.name.split(' ')[0]}
+                                    </span>
+                                  </div>
+                                </TooltipTrigger>
+                                <TooltipContent 
+                                  className="bg-gray-800 border-gray-700 text-white"
+                                >
+                                  <div className="space-y-1">
+                                    <p className="font-medium">{userInfo.name}</p>
+                                    <p className="text-sm text-gray-400">
+                                      {index === 0 ? 'Responsável atual' : 
+                                       index === 1 ? 'Próximo responsável' : 
+                                       `${index + 1}º na fila`}
+                                    </p>
+                                    <p className="text-sm text-gray-400">
+                                      {getLastCompletionDate(task.id, userId)}
+                                    </p>
+                                  </div>
+                                </TooltipContent>
+                              </Tooltip>
+                            );
+                          })}
+                        </TooltipProvider>
                       </div>
                     </div>
                   </div>
