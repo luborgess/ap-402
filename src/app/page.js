@@ -19,9 +19,9 @@ export default function Home() {
       <Header />
       <Hero />
       
-      <main className="container mx-auto px-4 py-12">
+      <main className="container mx-auto px-4 py-12 max-w-[1400px]">
         <div className="space-y-12">
-          <section id="escalas">
+          <section id="escalas" className="max-w-full mx-auto">
             <EscalaIntegrada />
           </section>
         </div>

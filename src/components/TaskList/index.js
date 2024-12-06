@@ -107,16 +107,6 @@ export function TaskList({ tasks, loading, onTaskCompleted }) {
 
       // Atualizar a lista de tarefas
       onTaskCompleted();
-      setTasks(tasks.map(t => {
-        if (t.id === task.id) {
-          return {
-            ...t,
-            next_date: nextDate.toISOString(),
-            responsible_users: rotatedUsers,
-          };
-        }
-        return t;
-      }));
 
       toast.success('Tarefa concluída com sucesso!');
     } catch (error) {
@@ -143,155 +133,164 @@ export function TaskList({ tasks, loading, onTaskCompleted }) {
 
   return (
     <div className="space-y-6">
-      <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg p-4">
-        <div className="flex flex-col sm:flex-row justify-between gap-4">
-          <div className="flex flex-col gap-1">
-            <h2 className="text-2xl font-bold text-white">
-              {viewMode === 'mine' ? 'Minhas Tarefas' : 'Todas as Tarefas'}
-            </h2>
-            <p className="text-gray-400">
-              {viewMode === 'mine' 
-                ? 'Visualize e gerencie suas tarefas atribuídas'
-                : 'Visualize e gerencie todas as tarefas do sistema'}
-            </p>
+      {/* Header Card */}
+      <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg p-4 sm:p-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-6">
+          <div className="bg-blue-500/10 p-3 rounded-full shrink-0">
+            <CheckCircle className="h-6 w-6 text-blue-400" />
           </div>
-          <div className="flex items-center gap-2">
+          <div>
+            <h2 className="text-xl font-bold text-white">Lista de Tarefas</h2>
+            <p className="text-gray-400">Gerencie e acompanhe suas tarefas</p>
+          </div>
+        </div>
+
+        <div className="flex flex-col sm:flex-row justify-between gap-4">
+          <div className="flex flex-wrap gap-2">
             <Button
               variant={viewMode === 'active' ? 'default' : 'outline'}
               onClick={() => setViewMode('active')}
               className={cn(
-                viewMode === 'active'
-                  ? 'bg-blue-500 hover:bg-blue-600'
-                  : 'hover:bg-gray-700/50'
+                "bg-gray-900/50 border-gray-700 text-white hover:bg-gray-800/50 w-full sm:w-auto",
+                viewMode === 'active' && "bg-purple-500 hover:bg-purple-600 border-purple-400"
               )}
             >
-              Todas as Tarefas
+              <CheckCircle className="w-4 h-4 mr-2 shrink-0" />
+              <span className="whitespace-nowrap">Todas as Tarefas</span>
             </Button>
             <Button
               variant={viewMode === 'mine' ? 'default' : 'outline'}
               onClick={() => setViewMode('mine')}
               className={cn(
-                viewMode === 'mine'
-                  ? 'bg-blue-500 hover:bg-blue-600'
-                  : 'hover:bg-gray-700/50'
+                "bg-gray-900/50 border-gray-700 text-white hover:bg-gray-800/50 w-full sm:w-auto",
+                viewMode === 'mine' && "bg-purple-500 hover:bg-purple-600 border-purple-400"
               )}
             >
-              Minhas Tarefas
+              <User className="w-4 h-4 mr-2 shrink-0" />
+              <span className="whitespace-nowrap">Minhas Tarefas</span>
             </Button>
           </div>
         </div>
       </div>
 
+      {/* Loading State */}
       {loading ? (
-        <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg p-8 text-center text-gray-400">
-          Carregando tarefas...
+        <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg p-6">
+          <div className="flex items-center justify-center text-gray-400">
+            <RefreshCw className="w-5 h-5 animate-spin mr-2" />
+            <span>Carregando tarefas...</span>
+          </div>
         </div>
       ) : filteredTasks.length === 0 ? (
-        <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg p-8 text-center">
-          <p className="text-gray-400">
-            {viewMode === 'mine'
-              ? 'Você não tem nenhuma tarefa atribuída no momento'
-              : 'Não há tarefas ativas no momento'}
-          </p>
+        <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg p-6">
+          <div className="text-center">
+            <div className="bg-gray-900/50 p-4 rounded-full inline-block mb-4">
+              <CheckCircle className="w-8 h-8 text-gray-400" />
+            </div>
+            <p className="text-gray-400">
+              {viewMode === 'mine'
+                ? 'Você não tem nenhuma tarefa atribuída no momento'
+                : 'Não há tarefas ativas no momento'}
+            </p>
+          </div>
         </div>
       ) : (
         <div className="space-y-4">
           {filteredTasks.map((task) => (
             <div
               key={task.id}
-              className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg p-4 hover:bg-gray-800/70 transition-all"
+              className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg p-6 hover:bg-gray-800/70 transition-colors"
             >
-              <div className="flex flex-col gap-3">
-                <div className="flex items-start justify-between gap-4">
-                  <h3 className="text-lg font-semibold text-white">
-                    {task.title}
-                  </h3>
-                  <AlertDialog>
+              <div className="flex flex-col sm:flex-row justify-between gap-4">
+                <div className="space-y-2 flex-1 min-w-0">
+                  <h3 className="text-lg font-semibold text-white truncate">{task.title}</h3>
+                  <p className="text-gray-400 line-clamp-2 sm:line-clamp-1">{task.description}</p>
+                  
+                  <div className="flex flex-wrap gap-y-2 gap-x-4 text-sm text-gray-400">
+                    <div className="flex items-center gap-1.5 min-w-[120px]">
+                      <Calendar className="w-4 h-4 shrink-0" />
+                      <span className="truncate">
+                        {format(new Date(task.next_date), "dd 'de' MMMM", { locale: ptBR })}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <RefreshCw className="w-4 h-4 shrink-0" />
+                      <span className="truncate">
+                        {task.frequency === 'daily' && 'Diária'}
+                        {task.frequency === 'weekly' && 'Semanal'}
+                        {task.frequency === 'monthly' && 'Mensal'}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <Users className="h-4 w-4 shrink-0" />
+                      <div className="flex flex-wrap gap-1">
+                        {task.responsible_users?.map((userId, index) => (
+                          <span 
+                            key={userId} 
+                            className={cn(
+                              "max-w-[150px] truncate",
+                              index === 0 && "text-green-600 font-medium"
+                            )}
+                            title={users[userId]} // Adiciona tooltip com nome completo
+                          >
+                            {users[userId]}
+                            {index < task.responsible_users.length - 1 && ", "}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center sm:ml-4">
+                  <AlertDialog open={showDialog && taskToComplete?.id === task.id}>
                     <AlertDialogTrigger asChild>
-                      <button
-                        onClick={() => handleCompleteTask(task)}
+                      <Button
+                        variant="outline"
+                        className="bg-purple-500/10 border-purple-400/20 text-purple-300 hover:bg-purple-500/20 hover:text-purple-200 w-full sm:w-auto"
                         disabled={completingTask === task.id}
-                        className={cn(
-                          "shrink-0 bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 px-3 py-1.5 rounded-lg border border-emerald-500/20 transition-colors flex items-center gap-2",
-                          completingTask === task.id && "opacity-50 cursor-not-allowed"
-                        )}
+                        onClick={() => handleCompleteTask(task)}
                       >
-                        <CheckCircle className="w-4 h-4" />
-                        <span>Concluir</span>
-                      </button>
+                        {completingTask === task.id ? (
+                          <>
+                            <RefreshCw className="w-4 h-4 animate-spin mr-2 shrink-0" />
+                            <span className="truncate">Concluindo...</span>
+                          </>
+                        ) : (
+                          <>
+                            <CheckCircle className="w-4 h-4 mr-2 shrink-0" />
+                            <span className="truncate">Concluir</span>
+                          </>
+                        )}
+                      </Button>
                     </AlertDialogTrigger>
-                    <AlertDialogContent>
+                    <AlertDialogContent className="bg-gray-900 border border-gray-700">
                       <AlertDialogHeader>
-                        <AlertDialogTitle>Confirmar conclusão da tarefa</AlertDialogTitle>
-                        <AlertDialogDescription asChild>
-                          <div>
-                            <p>Tem certeza que deseja marcar esta tarefa como concluída?</p>
-                            <p className="mt-2 text-sm">
-                              <strong>Tarefa:</strong> {task.title}
-                            </p>
-                          </div>
+                        <AlertDialogTitle className="text-white">Confirmar Conclusão</AlertDialogTitle>
+                        <AlertDialogDescription className="text-gray-400">
+                          Tem certeza que deseja marcar esta tarefa como concluída?
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
-                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => handleConfirm(task)}>
+                        <AlertDialogCancel 
+                          onClick={handleCancel}
+                          className="bg-gray-800 text-white hover:bg-gray-700"
+                        >
+                          Cancelar
+                        </AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={() => handleConfirm(task)}
+                          className="bg-purple-500 text-white hover:bg-purple-600"
+                        >
                           Confirmar
                         </AlertDialogAction>
                       </AlertDialogFooter>
                     </AlertDialogContent>
                   </AlertDialog>
                 </div>
-
-                <div className="flex flex-wrap gap-3 text-sm">
-                  <div className="flex items-center gap-1.5 text-gray-300">
-                    <Calendar className="w-4 h-4" />
-                    <span>
-                      Prazo: {format(new Date(task.next_date), "dd/MM/yyyy")}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center gap-1.5 text-gray-300">
-                    <RefreshCw className="w-4 h-4" />
-                    <span>
-                      {task.frequency === 'daily' && 'Diária'}
-                      {task.frequency === 'weekly' && 'Semanal'}
-                      {task.frequency === 'monthly' && 'Mensal'}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center gap-1.5">
-                    <Users className="w-4 h-4 text-gray-300" />
-                    <div className="flex items-center gap-1">
-                      <span className="text-gray-300">Responsável:</span>
-                      {task.responsible_users.map((id, index) => {
-                        const userName = users[id] || 'Usuário desconhecido';
-                        if (index === 0) {
-                          return (
-                            <span key={id} className="bg-blue-500/20 text-blue-300 px-2 py-0.5 rounded-md border border-blue-500/20">
-                              {userName}
-                            </span>
-                          );
-                        } else if (index === 1) {
-                          return (
-                            <span key={id} className="text-gray-400 flex items-center gap-1">
-                              <ArrowRight className="w-4 h-4" />
-                              {userName}
-                            </span>
-                          );
-                        }
-                        return null;
-                      })}
-                    </div>
-                  </div>
-                </div>
               </div>
             </div>
           ))}
-          {filteredTasks.length === 0 && !loading && (
-            <div className="text-center text-gray-400 py-8">
-              Nenhuma tarefa ativa encontrada
-            </div>
-          )}
         </div>
       )}
     </div>
