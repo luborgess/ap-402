@@ -1,34 +1,48 @@
 import React from 'react';
 import { useEscalaLavanderia } from './useEscalaLavanderia';
+import { Download } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 export const DownloadSection = ({ selectedPerson, onPersonSelect, onDownload }) => {
   const { residents } = useEscalaLavanderia();
 
   return (
-    <div className="flex flex-col items-center gap-4">
-      <div className="mt-4 sm:mt-6 bg-white/10 rounded-lg p-4 sm:p-6 shadow-lg backdrop-blur-md flex flex-col sm:flex-row items-center justify-between">
-        <h3 className="bg-blue-600 rounded-md text-lg sm:text-xl font-semibold mb-2 sm:mb-0 px-2 py-1 text-white">
-          Escala semestral:
-        </h3>
-        <div className="flex items-center gap-4 justify-center px-2 py-1">
-          <select
-            value={selectedPerson}
-            onChange={onPersonSelect}
-            className="bg-blue-600 px-4 py-2 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-700 focus:ring-offset-2"
-          >
-            <option value="">Selecione seu nome</option>
-            {residents.map((person, index) => (
-              <option key={index} value={person}>{person}</option>
-            ))}
-          </select>
-          {selectedPerson && (
-            <button
-              onClick={onDownload}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+    <div className="mt-4">
+      <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg p-4">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex flex-col gap-1">
+            <h3 className="text-xl font-bold text-white">
+              Escala Semestral
+            </h3>
+            <p className="text-gray-400">
+              Baixe sua escala personalizada
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <select
+              value={selectedPerson}
+              onChange={onPersonSelect}
+              className="bg-gray-800/50 text-gray-200 px-4 py-2 rounded-lg border border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
-              Download ⬇️
-            </button>
-          )}
+              <option value="" className="bg-gray-900">Selecione seu nome</option>
+              {residents.map((person, index) => (
+                <option key={index} value={person} className="bg-gray-900">
+                  {person}
+                </option>
+              ))}
+            </select>
+
+            {selectedPerson && (
+              <Button
+                onClick={onDownload}
+                variant="ghost"
+                className="text-gray-400 hover:text-white hover:bg-gray-700/50"
+              >
+                <Download className="h-5 w-5" />
+              </Button>
+            )}
+          </div>
         </div>
       </div>
     </div>

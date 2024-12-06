@@ -1,56 +1,116 @@
-# Escala da Roupa 👖
+# AP 402 - Sistema de Gestão de Tarefas 
 
-Este é um projeto Next.js que gerencia a escala de lavagem de roupas em uma república universitária.
+Uma aplicação web moderna para gerenciar tarefas e responsabilidades em uma república universitária.
 
-## Changelog
+## Funcionalidades Principais
 
-### v1.2.0 (21/11/2024)
-- 📅 Ajuste no período de eventos do calendário
-  - Eventos gerados apenas a partir do dia atual
-  - Data final definida para 8 de fevereiro de 2024 (fim do semestre letivo da UFMG)
-  - Remoção da geração de eventos passados
-  - Otimização no formato das datas ICS
+### Gestão de Usuários 
+- Autenticação com email/senha ou Google
+- Perfis personalizados com:
+  - Nome
+  - Foto de perfil
+  - Número do quarto
+  - WhatsApp
+  - Bio
 
-### v1.1.0 (21/11/2024)
-- ✨ Melhoria na visualização temporal
-  - Inicialização automática na semana atual
-  - Ajuste no botão "Voltar para semana atual"
-  - Navegação temporal mais intuitiva
-  - Melhoria na experiência do usuário
+### Gestão de Tarefas 
+- Criação de tarefas com:
+  - Título e descrição
+  - Múltiplos responsáveis
+  - Frequência (diária, semanal, mensal)
+  - Data de próxima execução
+- Visualização de tarefas pendentes
+- Marcação de tarefas concluídas
+- Histórico completo de tarefas realizadas
 
-### v1.0.0 (Initial Release)
-- 🎉 Funcionalidades iniciais
-  - Visualização semanal da escala
-  - Navegação entre semanas
-  - Exportação para Google Calendar
-  - Download de calendário pessoal (.ics)
-  - Lista de moradores configurada
-  - Interface responsiva
+### Interface Moderna 
+- Design responsivo (mobile-first)
+- Tema claro com elementos em gradiente
+- Feedback visual com toasts
+- Componentes interativos modernos
 
-## Funcionalidades
+## Tecnologias Utilizadas
 
-- 📅 Visualização semanal da escala de lavanderia
-- 🔄 Navegação intuitiva entre as semanas
-- 📱 Design responsivo (mobile-first)
-- 📤 Exportação de eventos para Google Calendar
-- 💾 Download de calendário pessoal (.ics)
-- 🎯 Identificação automática da semana atual
-- 👥 Sistema de rodízio entre moradores
-
-## Tecnologias
-
-- Next.js 15
-- React 19
+### Frontend
+- Next.js 13 (App Router)
+- React 18
 - Tailwind CSS
 - Shadcn/UI
 - Lucide Icons
+- date-fns para formatação de datas
+- React Hot Toast para notificações
 
-## Getting Started
+### Backend
+- Supabase para:
+  - Autenticação
+  - Banco de dados PostgreSQL
+  - Storage para avatares
+  - Row Level Security (RLS)
 
+### Tabelas do Banco
+- `profiles`: Informações dos usuários
+- `tasks`: Tarefas e suas configurações
+- `task_history`: Histórico de conclusões
+
+## Instalação e Execução
+
+1. Clone o repositório:
+```bash
+git clone [url-do-repositório]
+```
+
+2. Instale as dependências:
+```bash
+npm install
+# ou
+yarn install
+```
+
+3. Configure as variáveis de ambiente:
+```env
+NEXT_PUBLIC_SUPABASE_URL=sua-url-do-supabase
+NEXT_PUBLIC_SUPABASE_ANON_KEY=sua-chave-anon-do-supabase
+```
+
+4. Execute o projeto:
 ```bash
 npm run dev
 # ou
 yarn dev
 ```
 
-Abra [http://localhost:3000](http://localhost:3000) no seu navegador para ver o resultado.
+5. Acesse em [http://localhost:3000](http://localhost:3000)
+
+## Estrutura do Projeto
+
+```
+src/
+├── app/                    # Rotas e páginas
+├── components/            # Componentes React
+│   ├── Auth/             # Componentes de autenticação
+│   ├── TaskForm/         # Formulário de tarefas
+│   ├── TaskList/         # Lista de tarefas
+│   ├── TaskHistory/      # Histórico de tarefas
+│   └── ui/               # Componentes UI reutilizáveis
+├── contexts/             # Contextos React
+├── lib/                  # Utilitários e configurações
+└── styles/              # Estilos globais
+```
+
+## Contribuição
+
+1. Faça um fork do projeto
+2. Crie uma branch para sua feature (`git checkout -b feature/nova-feature`)
+3. Commit suas mudanças (`git commit -m 'Adiciona nova feature'`)
+4. Push para a branch (`git push origin feature/nova-feature`)
+5. Abra um Pull Request
+
+## Changelog
+
+### v2.0.0 (Atual)
+- Sistema completo de gestão de tarefas
+- Perfis de usuário com fotos
+- Interface moderna e responsiva
+- Histórico detalhado de tarefas
+- Autenticação segura
+- Design system com Shadcn/UI

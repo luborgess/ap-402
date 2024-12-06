@@ -1,173 +1,197 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Card } from '@/components/ui/card';
+import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { supabase } from '@/lib/supabase';
-import { PlusCircle, Loader2, X } from 'lucide-react';
+} from '@/components/ui/select';
+import { Command } from "cmdk";
+import { Check, ChevronsUpDown } from "lucide-react";
+import { cn } from "@/lib/utils";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { format, add } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { toast } from 'react-hot-toast';
 
-export function TaskForm({ onSubmit, initialData = null }) {
-  const [loading, setLoading] = useState(false);
+export function TaskForm({ onTaskAdded }) {
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [frequency, setFrequency] = useState('daily');
   const [users, setUsers] = useState([]);
-  const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    frequency: 'daily',
-    responsible_users: [],
-    next_date: new Date().toISOString().split('T')[0],
-    ...initialData
-  });
+  const [selectedUsers, setSelectedUsers] = useState([]);
+  const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     fetchUsers();
   }, []);
 
   const fetchUsers = async () => {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('id, name');
-    
-    if (!error) {
-      setUsers(data);
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, name')
+        .not('name', 'is', null)  // Only get profiles with names
+        .order('name');
+
+      if (error) throw error;
+      
+      // Filter out any profiles without names and format them
+      const validUsers = (data || []).filter(profile => profile.name);
+      setUsers(validUsers);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      toast.error('Erro ao carregar usuários');
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    
+
     try {
-      await onSubmit(formData);
-      setFormData({
-        title: '',
-        description: '',
-        frequency: 'daily',
-        responsible_users: [],
-        next_date: new Date().toISOString().split('T')[0]
+      // Calcular próxima data com base na frequência
+      const nextDate = add(new Date(), {
+        days: frequency === 'daily' ? 1 : frequency === 'weekly' ? 7 : 30,
       });
+
+      const { error } = await supabase.from('tasks').insert([
+        {
+          title,
+          description,
+          frequency,
+          responsible_users: selectedUsers.map(user => user.id),
+          next_date: format(nextDate, 'yyyy-MM-dd', { locale: ptBR }),
+          created_at: new Date().toISOString(),
+        },
+      ]);
+
+      if (error) throw error;
+
+      setTitle('');
+      setDescription('');
+      setFrequency('daily');
+      setSelectedUsers([]);
+      
+      if (onTaskAdded) {
+        onTaskAdded();
+      }
+      toast.success('Tarefa criada com sucesso!');
+    } catch (error) {
+      console.error('Error creating task:', error);
+      toast.error('Erro ao criar tarefa');
     } finally {
       setLoading(false);
     }
   };
 
-  const addResponsible = (userId) => {
-    if (!formData.responsible_users.includes(userId)) {
-      setFormData({
-        ...formData,
-        responsible_users: [...formData.responsible_users, userId]
-      });
-    }
-  };
-
-  const removeResponsible = (userId) => {
-    setFormData({
-      ...formData,
-      responsible_users: formData.responsible_users.filter(id => id !== userId)
-    });
-  };
-
   return (
-    <Card className="p-6">
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Título</label>
-          <Input
-            required
-            value={formData.title}
-            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-            className="mt-1"
-          />
-        </div>
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="space-y-2">
+        <Label htmlFor="title">Título</Label>
+        <Input
+          id="title"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          required
+        />
+      </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Descrição</label>
-          <Textarea
-            value={formData.description}
-            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-            className="mt-1"
-          />
-        </div>
+      <div className="space-y-2">
+        <Label htmlFor="description">Descrição</Label>
+        <Textarea
+          id="description"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+        />
+      </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Frequência</label>
-          <Select
-            value={formData.frequency}
-            onValueChange={(value) => setFormData({ ...formData, frequency: value })}
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
+      <div className="space-y-2">
+        <Label>Responsáveis</Label>
+        <Popover open={open} onOpenChange={setOpen}>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              role="combobox"
+              aria-expanded={open}
+              className="w-full justify-between"
+            >
+              {selectedUsers.length === 0
+                ? "Selecione os responsáveis..."
+                : `${selectedUsers.length} selecionado(s)`}
+              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-full p-0">
+            <Command className="w-full">
+              <div className="max-h-60 overflow-auto">
+                {users.map((user) => (
+                  <div
+                    key={user.id}
+                    className={cn(
+                      "flex cursor-pointer items-center justify-between px-4 py-2 hover:bg-accent",
+                      selectedUsers.some(u => u.id === user.id) && "bg-accent"
+                    )}
+                    onClick={() => {
+                      setSelectedUsers(prev => {
+                        const isSelected = prev.some(u => u.id === user.id);
+                        if (isSelected) {
+                          return prev.filter(u => u.id !== user.id);
+                        } else {
+                          return [...prev, user];
+                        }
+                      });
+                    }}
+                  >
+                    <span>{user.name}</span>
+                    {selectedUsers.some(u => u.id === user.id) && (
+                      <Check className="h-4 w-4" />
+                    )}
+                  </div>
+                ))}
+              </div>
+            </Command>
+          </PopoverContent>
+        </Popover>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="frequency">Frequência</Label>
+        <Select
+          value={frequency}
+          onValueChange={setFrequency}
+        >
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectGroup>
+              <SelectLabel>Frequência</SelectLabel>
               <SelectItem value="daily">Diária</SelectItem>
               <SelectItem value="weekly">Semanal</SelectItem>
               <SelectItem value="monthly">Mensal</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+            </SelectGroup>
+          </SelectContent>
+        </Select>
+      </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Responsáveis</label>
-          <div className="flex flex-wrap gap-2 mb-2">
-            {formData.responsible_users.map((userId) => {
-              const user = users.find(u => u.id === userId);
-              return user ? (
-                <div 
-                  key={userId}
-                  className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 rounded-full text-sm"
-                >
-                  {user.name}
-                  <button
-                    type="button"
-                    onClick={() => removeResponsible(userId)}
-                    className="text-gray-500 hover:text-gray-700"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-                </div>
-              ) : null;
-            })}
-          </div>
-          <Select onValueChange={addResponsible}>
-            <SelectTrigger>
-              <SelectValue placeholder="Adicionar responsável" />
-            </SelectTrigger>
-            <SelectContent>
-              {users
-                .filter(user => !formData.responsible_users.includes(user.id))
-                .map((user) => (
-                  <SelectItem key={user.id} value={user.id}>
-                    {user.name}
-                  </SelectItem>
-                ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Próxima Data</label>
-          <Input
-            type="date"
-            required
-            value={formData.next_date}
-            onChange={(e) => setFormData({ ...formData, next_date: e.target.value })}
-            className="mt-1"
-          />
-        </div>
-
-        <Button type="submit" disabled={loading || formData.responsible_users.length === 0}>
-          {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          {initialData ? 'Atualizar' : 'Criar'} Tarefa
-        </Button>
-      </form>
-    </Card>
+      <Button type="submit" disabled={loading || !title || selectedUsers.length === 0}>
+        {loading ? "Criando..." : "Criar Tarefa"}
+      </Button>
+    </form>
   );
 }

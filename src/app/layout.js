@@ -6,17 +6,16 @@ import { Toaster } from 'react-hot-toast';
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
   variable: "--font-geist-sans",
-  weight: "100 900",
 });
+
 const geistMono = localFont({
   src: "./fonts/GeistMonoVF.woff",
   variable: "--font-geist-mono",
-  weight: "100 900",
 });
 
 export const metadata = {
-  title: "AP 402 | Gestão Inteligente de Escalas",
-  description: "Sistema de gestão inteligente de escalas do AP 402",
+  title: "AP 402",
+  description: "Gestão Inteligente de Escalas",
 };
 
 export default function RootLayout({ children }) {
